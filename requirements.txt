@@ -1,1 +1,5 @@
 flask
+firebase-admin
+requests
+bs4
+flask-wtf

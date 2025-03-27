@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, Blueprint, redirect
+from flask import Flask, render_template, request, Blueprint, redirect, session
 from datetime import datetime, timezone, timedelta
 from firebase_manager import authenticate_user, check_email_exists, create_user, get_all_documents
 from web_crawler import crawl_movies
@@ -8,6 +8,9 @@ app = Flask(__name__)
 # 使用藍圖組織相關路由
 auth_bp = Blueprint('auth', __name__)
 
+# 在app初始化後添加
+app.secret_key = 'your_secret_key'  # 在實際應用中使用安全的隨機字符串
+
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
@@ -15,11 +18,19 @@ def login():
         password = request.form.get('password')
         user = authenticate_user(username, password)
         if user:
-            # 這裡可以設置session或cookie來跟踪登入狀態
+            # 使用session記錄登入狀態
+            session['user_id'] = user.get('id')
+            session['user_name'] = user.get('display_name')
             return redirect('/')
         else:
             return render_template('login.html', error='帳號或密碼不正確')
     return render_template('login.html')
+
+@auth_bp.route('/logout')
+def logout():
+    # 清除session
+    session.clear()
+    return redirect('/')
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
@@ -81,8 +92,16 @@ def account():
 
 @app.route("/movies")
 def movies():
+    # 搜索功能
+    search_query = request.args.get('search', '').strip()
+    
     # 從Firebase獲取電影數據
     movies = get_all_documents("movies")
+    
+    # 如果有搜索查詢，過濾結果
+    if search_query:
+        movies = [movie for movie in movies if search_query.lower() in movie.get('title', '').lower()]
+    
     return render_template("movies.html", movies=movies)
 
 @app.route("/update_movies")
@@ -90,6 +109,14 @@ def update_movies():
     # 爬取最新電影數據
     movies = crawl_movies()
     return redirect("/movies")
+
+@app.errorhandler(404)
+def page_not_found(e):
+    return render_template('error.html', error='找不到頁面'), 404
+
+@app.errorhandler(500)
+def internal_server_error(e):
+    return render_template('error.html', error='伺服器內部錯誤'), 500
 
 if __name__ == "__main__":
     app.run(debug=True)

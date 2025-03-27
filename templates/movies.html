@@ -8,6 +8,17 @@
     <a href="/update_movies" class="btn btn-primary">更新電影資料</a>
 </div>
 
+<div class="mb-4">
+    <form method="GET" action="/movies" class="row g-3">
+        <div class="col-md-8">
+            <input type="text" name="search" class="form-control" placeholder="搜索電影..." value="{{ request.args.get('search', '') }}">
+        </div>
+        <div class="col-md-4">
+            <button type="submit" class="btn btn-primary w-100">搜索</button>
+        </div>
+    </form>
+</div>
+
 {% if movies %}
 <div class="row">
     {% for movie in movies %}

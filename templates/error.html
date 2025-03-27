@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+
+{% block title %}錯誤 - 顧晉瑋的網站{% endblock %}
+
+{% block content %}
+<div class="alert alert-danger">
+    <h2>發生錯誤</h2>
+    <p>{{ error }}</p>
+    <a href="/" class="btn btn-primary">返回首頁</a>
+</div>
+{% endblock %} 

@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 from firebase_manager import add_document
+from firebase_admin import firestore
 
 def crawl_movies():
     """爬取電影資訊"""
