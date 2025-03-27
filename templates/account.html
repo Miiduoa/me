@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}表單傳值 - 顧晉瑋的網站{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h2>表單傳值示範</h2>
+    </div>
+    <div class="card-body">
+        <form method="POST" action="/account">
+            <div class="mb-3">
+                <label for="user" class="form-label">帳號</label>
+                <input type="text" class="form-control" id="user" name="user" required>
+            </div>
+            <div class="mb-3">
+                <label for="pwd" class="form-label">密碼</label>
+                <input type="password" class="form-control" id="pwd" name="pwd" required>
+            </div>
+            <button type="submit" class="btn btn-primary">提交</button>
+        </form>
+    </div>
+</div>
+{% endblock %} 

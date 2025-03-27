@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}電影列表 - 顧晉瑋的網站{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>最新電影</h1>
+    <a href="/update_movies" class="btn btn-primary">更新電影資料</a>
+</div>
+
+{% if movies %}
+<div class="row">
+    {% for movie in movies %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            {% if movie.poster %}
+            <img src="{{ movie.poster }}" class="card-img-top" alt="{{ movie.title }}">
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ movie.title }}</h5>
+                <p class="card-text">
+                    <small class="text-muted">上映日期: {{ movie.date }}</small><br>
+                    <small class="text-muted">評分: {{ movie.rating }}</small>
+                </p>
+                {% if movie.link %}
+                <a href="{{ movie.link }}" target="_blank" class="btn btn-primary">查看詳情</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info">
+    目前沒有電影資料，請點擊"更新電影資料"按鈕爬取最新資訊。
+</div>
+{% endif %}
+{% endblock %} 

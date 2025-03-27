@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}表單結果 - 顧晉瑋的網站{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-success text-white">
+        <h2>表單提交結果</h2>
+    </div>
+    <div class="card-body">
+        <p class="h4">{{ result }}</p>
+        <a href="/account" class="btn btn-primary mt-3">返回表單</a>
+    </div>
+</div>
+{% endblock %} 

@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}註冊 - 顧晉瑋的網站{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-primary text-white">
+                <h2>註冊新帳號</h2>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="/register">
+                    <div class="mb-3">
+                        <label for="display_name" class="form-label">顯示名稱</label>
+                        <input type="text" class="form-control" id="display_name" name="display_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">電子郵件</label>
+                        <input type="email" class="form-control" id="email" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">密碼</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="confirm_password" class="form-label">確認密碼</label>
+                        <input type="password" class="form-control" id="confirm_password" name="confirm_password" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">註冊</button>
+                </form>
+                <p class="mt-3">已有帳號？<a href="/login">立即登入</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

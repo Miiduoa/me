@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}關於我 - 顧晉瑋的網站{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header bg-primary text-white">
+        <h2>顧晉瑋簡介</h2>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4 text-center mb-3">
+                <img src="{{ url_for('static', filename='images/profile.jpg') }}" class="img-fluid rounded-circle" alt="顧晉瑋照片" style="max-width: 200px;">
+            </div>
+            <div class="col-md-8">
+                <h3>個人資料</h3>
+                <ul class="list-group list-group-flush mb-3">
+                    <li class="list-group-item"><strong>姓名：</strong>顧晉瑋</li>
+                    <li class="list-group-item"><strong>學校：</strong>淡江大學</li>
+                    <li class="list-group-item"><strong>系所：</strong>資訊管理學系</li>
+                    <li class="list-group-item"><strong>興趣：</strong>網頁設計、程式開發</li>
+                </ul>
+                
+                <h3>專業技能</h3>
+                <div class="mb-3">
+                    <span class="badge bg-primary">HTML/CSS</span>
+                    <span class="badge bg-primary">JavaScript</span>
+                    <span class="badge bg-primary">Python</span>
+                    <span class="badge bg-primary">Flask</span>
+                    <span class="badge bg-primary">Bootstrap</span>
+                    <span class="badge bg-primary">Firebase</span>
+                </div>
+                
+                <h3>自我介紹</h3>
+                <p>這裡是關於您的詳細介紹。您可以描述自己的學習經歷、專業興趣、未來目標等內容。</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

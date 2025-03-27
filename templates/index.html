@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}首頁 - 顧晉瑋的網站{% endblock %}
+
+{% block content %}
+<div class="jumbotron">
+    <h1 class="display-4">歡迎來到顧晉瑋的網站</h1>
+    <p class="lead">這是一個使用Flask、Bootstrap和Firebase構建的動態網站。</p>
+    <hr class="my-4">
+    <p>探索以下功能：</p>
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">顯示日期時間</h5>
+                    <p class="card-text">查看當前的日期和時間。</p>
+                    <a href="/today" class="btn btn-primary">查看</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">個人簡介</h5>
+                    <p class="card-text">了解更多關於顧晉瑋的信息。</p>
+                    <a href="/about" class="btn btn-primary">了解更多</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-3">
+            <div class="card h-100">
+                <div class="card-body">
+                    <h5 class="card-title">帳號管理</h5>
+                    <p class="card-text">登入或創建新帳號。</p>
+                    <a href="/account" class="btn btn-primary">進入</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
