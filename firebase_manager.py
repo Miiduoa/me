@@ -1,11 +1,23 @@
 import firebase_admin
 from firebase_admin import credentials, firestore
 import os
+import json
+import base64
 
 # 初始化Firebase (只需執行一次)
 def initialize_firebase():
     if not firebase_admin._apps:
-        cred = credentials.Certificate('serviceAccountKey.json')
+        # 嘗試從環境變量讀取
+        if 'FIREBASE_SERVICE_ACCOUNT' in os.environ:
+            # 從 Base64 解碼並解析 JSON
+            service_account_info = json.loads(
+                base64.b64decode(os.environ.get('FIREBASE_SERVICE_ACCOUNT')).decode('utf-8')
+            )
+            cred = credentials.Certificate(service_account_info)
+        else:
+            # 從本地文件讀取（開發環境）
+            cred = credentials.Certificate('serviceAccountKey.json')
+        
         firebase_admin.initialize_app(cred)
     return firestore.client()
 

@@ -15,5 +15,8 @@
             "src": "/(.*)",
             "dest": "/index.py"
         }
-    ]
+    ],
+    "env": {
+        "PYTHONUNBUFFERED": "1"
+    }
 }

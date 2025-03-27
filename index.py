@@ -2,29 +2,32 @@ from flask import Flask, render_template, request, Blueprint, redirect, session
 from datetime import datetime, timezone, timedelta
 from firebase_manager import authenticate_user, check_email_exists, create_user, get_all_documents
 from web_crawler import crawl_movies
+from forms import LoginForm, RegisterForm
+import os
+import secrets
 
 app = Flask(__name__)
 
 # 使用藍圖組織相關路由
 auth_bp = Blueprint('auth', __name__)
 
-# 在app初始化後添加
-app.secret_key = 'your_secret_key'  # 在實際應用中使用安全的隨機字符串
+# 從環境變量獲取密鑰，如果不存在則生成一個
+app.secret_key = os.environ.get('SECRET_KEY') or secrets.token_hex(16)
 
 @auth_bp.route('/login', methods=['GET', 'POST'])
 def login():
-    if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        user = authenticate_user(username, password)
+    form = LoginForm()
+    if form.validate_on_submit():
+        email = form.email.data
+        password = form.password.data
+        user = authenticate_user(email, password)
         if user:
-            # 使用session記錄登入狀態
             session['user_id'] = user.get('id')
             session['user_name'] = user.get('display_name')
             return redirect('/')
         else:
-            return render_template('login.html', error='帳號或密碼不正確')
-    return render_template('login.html')
+            form.email.errors.append('帳號或密碼不正確')
+    return render_template('login.html', form=form)
 
 @auth_bp.route('/logout')
 def logout():
@@ -34,19 +37,16 @@ def logout():
 
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
-    if request.method == 'POST':
-        display_name = request.form.get('display_name')
-        email = request.form.get('email')
-        password = request.form.get('password')
-        confirm_password = request.form.get('confirm_password')
-        
-        # 表單驗證
-        if password != confirm_password:
-            return render_template('register.html', error='兩次輸入的密碼不一致')
+    form = RegisterForm()
+    if form.validate_on_submit():
+        display_name = form.display_name.data
+        email = form.email.data
+        password = form.password.data
         
         # 檢查郵箱是否已存在
         if check_email_exists(email):
-            return render_template('register.html', error='此電子郵件已被註冊')
+            form.email.errors.append('此電子郵件已被註冊')
+            return render_template('register.html', form=form)
         
         # 創建新用戶
         user_id = create_user(email, password, display_name)
@@ -54,9 +54,9 @@ def register():
             # 註冊成功，導向登入頁
             return redirect('/login')
         else:
-            return render_template('register.html', error='註冊失敗，請稍後再試')
+            return render_template('register.html', form=form, error='註冊失敗，請稍後再試')
     
-    return render_template('register.html')
+    return render_template('register.html', form=form)
 
 # 註冊藍圖
 app.register_blueprint(auth_bp)
@@ -94,15 +94,36 @@ def account():
 def movies():
     # 搜索功能
     search_query = request.args.get('search', '').strip()
+    page = request.args.get('page', 1, type=int)
+    per_page = 9  # 每頁顯示的電影數量
     
     # 從Firebase獲取電影數據
-    movies = get_all_documents("movies")
+    all_movies = get_all_documents("movies")
     
     # 如果有搜索查詢，過濾結果
     if search_query:
-        movies = [movie for movie in movies if search_query.lower() in movie.get('title', '').lower()]
+        all_movies = [movie for movie in all_movies if search_query.lower() in movie.get('title', '').lower()]
     
-    return render_template("movies.html", movies=movies)
+    # 簡單分頁實現
+    total = len(all_movies)
+    total_pages = (total + per_page - 1) // per_page
+    
+    if page < 1:
+        page = 1
+    elif page > total_pages and total_pages > 0:
+        page = total_pages
+    
+    start = (page - 1) * per_page
+    end = start + per_page
+    movies = all_movies[start:end]
+    
+    return render_template(
+        "movies.html", 
+        movies=movies, 
+        page=page, 
+        total_pages=total_pages,
+        search_query=search_query
+    )
 
 @app.route("/update_movies")
 def update_movies():
@@ -117,6 +138,14 @@ def page_not_found(e):
 @app.errorhandler(500)
 def internal_server_error(e):
     return render_template('error.html', error='伺服器內部錯誤'), 500
+
+# 設置安全相關的頭部信息
+@app.after_request
+def add_security_headers(response):
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'SAMEORIGIN'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    return response
 
 if __name__ == "__main__":
     app.run(debug=True)
