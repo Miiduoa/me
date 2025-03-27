@@ -102,26 +102,23 @@ def clear_cache_on_change(collection):
 
 # 初始化Firebase (只需執行一次)
 def initialize_firebase():
-    """初始化 Firebase，如果未初始化則進行初始化"""
+    """初始化 Firebase 連接並返回 Firestore 數據庫實例"""
     try:
+        # 檢查是否已初始化
         firebase_admin.get_app()
     except ValueError:
-        # 設定 Firebase 憑證路徑
-        cred_path = os.environ.get('FIREBASE_CREDENTIALS', 'path/to/your/serviceAccountKey.json')
-        if os.path.exists(cred_path):
-            cred = credentials.Certificate(cred_path)
+        # 未初始化，執行初始化
+        if os.path.exists('serviceAccountKey.json'):
+            cred = credentials.Certificate('serviceAccountKey.json')
         else:
-            # 從環境變數加載憑證
-            cred_dict = json.loads(base64.b64decode(os.environ.get('FIREBASE_CREDENTIALS_JSON', '')).decode('utf-8'))
-            cred = credentials.Certificate(cred_dict)
+            # 從環境變量獲取 Firebase 配置
+            service_account_info = json.loads(base64.b64decode(os.environ.get('FIREBASE_CONFIG', '')))
+            cred = credentials.Certificate(service_account_info)
         
-        # 初始化 Firebase
-        bucket_name = os.environ.get('FIREBASE_STORAGE_BUCKET', 'your-project-id.appspot.com')
         firebase_admin.initialize_app(cred, {
-            'storageBucket': bucket_name
+            'storageBucket': 'project-7332910669653362321.appspot.com'
         })
     
-    # 獲取 Firestore 資料庫實例
     return firestore.client()
 
 # 基本CRUD操作
@@ -132,13 +129,18 @@ def add_document(collection, data):
     return doc_ref.id
 
 def get_document(collection, doc_id):
-    db = initialize_firebase()
-    doc = db.collection(collection).document(doc_id).get()
-    if doc.exists:
-        data = doc.to_dict()
-        data['id'] = doc_id  # 添加文檔ID到數據中
-        return data
-    return None
+    """獲取指定集合和ID的文檔"""
+    try:
+        db = initialize_firebase()
+        doc = db.collection(collection).document(doc_id).get()
+        if doc.exists:
+            data = doc.to_dict()
+            data['id'] = doc_id
+            return data
+        return None
+    except Exception as e:
+        logger.error(f"獲取文檔錯誤 ({collection}/{doc_id}): {e}")
+        return None
 
 # 添加到現有文件中
 def authenticate_user(email, password):
@@ -152,27 +154,77 @@ def authenticate_user(email, password):
             return user_data
     return None
 
-def create_user(email, password, display_name=None):
-    """創建新用戶"""
-    user_data = {
-        'email': email,
-        'password': password,  # 實際應用中應加密儲存
-        'display_name': display_name,
-        'created_at': firestore.SERVER_TIMESTAMP
-    }
-    return add_document('users', user_data)
+def create_user(email, password, display_name):
+    """創建新用戶，返回用戶ID"""
+    try:
+        # 初始化 Firebase
+        db = initialize_firebase()
+        auth = firebase_admin.auth
+        
+        # 創建認證用戶
+        user = auth.create_user(
+            email=email,
+            password=password,
+            display_name=display_name
+        )
+        
+        # 在 Firestore 中創建用戶記錄
+        user_data = {
+            'email': email,
+            'display_name': display_name,
+            'created_at': firestore.SERVER_TIMESTAMP,
+            'avatar_url': '',  # 初始無頭像
+            'bio': ''  # 初始無簡介
+        }
+        
+        # 使用相同的 UID 作為文檔 ID
+        db.collection('users').document(user.uid).set(user_data)
+        
+        logger.info(f"成功創建用戶: {user.uid}")
+        return user.uid
+    except Exception as e:
+        logger.error(f"創建用戶失敗: {str(e)}")
+        return None
 
 def check_email_exists(email):
-    """檢查郵箱是否已被註冊"""
-    db = initialize_firebase()
-    users = db.collection('users').where('email', '==', email).limit(1).get()
-    return len(list(users)) > 0
+    """檢查郵箱是否已存在"""
+    try:
+        auth = firebase_admin.auth
+        try:
+            # 嘗試通過郵箱查找用戶
+            user = auth.get_user_by_email(email)
+            return True  # 用戶存在
+        except firebase_admin.auth.UserNotFoundError:
+            return False  # 用戶不存在
+    except Exception as e:
+        logger.error(f"檢查郵箱存在性錯誤: {str(e)}")
+        # 如果出現錯誤，假設郵箱不存在，讓用戶嘗試註冊
+        return False
 
-def get_all_documents(collection):
-    """獲取集合中的所有文檔"""
-    db = initialize_firebase()
-    docs = db.collection(collection).get()
-    return [{'id': doc.id, **doc.to_dict()} for doc in docs]  # 合併ID與數據
+def get_all_documents(collection, limit=100, order_by=None, direction='desc'):
+    """獲取指定集合的所有文檔，可選排序和限制"""
+    try:
+        db = initialize_firebase()
+        query = db.collection(collection)
+        
+        if order_by:
+            direction_obj = firestore.Query.DESCENDING if direction == 'desc' else firestore.Query.ASCENDING
+            query = query.order_by(order_by, direction=direction_obj)
+        
+        if limit:
+            query = query.limit(limit)
+            
+        docs = query.get()
+        result = []
+        for doc in docs:
+            data = doc.to_dict()
+            data['id'] = doc.id
+            result.append(data)
+        
+        return result
+    except Exception as e:
+        logger.error(f"獲取所有文檔錯誤 ({collection}): {e}")
+        return []
 
 @clear_cache_on_change('likes')
 def add_like(user_id, movie_id):

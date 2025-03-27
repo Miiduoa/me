@@ -10,6 +10,7 @@ import logging
 import firebase_admin
 from firebase_admin import firestore
 from werkzeug.utils import secure_filename
+import jinja2
 
 app = Flask(__name__)
 
@@ -57,25 +58,32 @@ def logout():
 @auth_bp.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegisterForm()
-    if form.validate_on_submit():
-        display_name = form.display_name.data
-        email = form.email.data
-        password = form.password.data
+    try:
+        if form.validate_on_submit():
+            display_name = form.display_name.data
+            email = form.email.data
+            password = form.password.data
+            
+            # 檢查郵箱是否已存在
+            if check_email_exists(email):
+                form.email.errors.append('此電子郵件已被註冊')
+                return render_template('register.html', form=form)
+            
+            # 創建新用戶
+            user_id = create_user(email, password, display_name)
+            if user_id:
+                # 註冊成功，導向登入頁
+                flash('註冊成功！請登入', 'success')
+                return redirect(url_for('auth.login'))
+            else:
+                flash('註冊失敗，請稍後再試', 'danger')
+                return render_template('register.html', form=form)
         
-        # 檢查郵箱是否已存在
-        if check_email_exists(email):
-            form.email.errors.append('此電子郵件已被註冊')
-            return render_template('register.html', form=form)
-        
-        # 創建新用戶
-        user_id = create_user(email, password, display_name)
-        if user_id:
-            # 註冊成功，導向登入頁
-            return redirect('/login')
-        else:
-            return render_template('register.html', form=form, error='註冊失敗，請稍後再試')
-    
-    return render_template('register.html', form=form)
+        return render_template('register.html', form=form)
+    except Exception as e:
+        logger.error(f"註冊頁面錯誤: {str(e)}")
+        flash('發生錯誤，請稍後再試', 'danger')
+        return render_template('register.html', form=form)
 
 @auth_bp.route('/verify-token', methods=['POST'])
 def verify_token():
@@ -456,11 +464,19 @@ def set_language():
 
 @app.errorhandler(404)
 def page_not_found(e):
-    return render_template('error.html', error='找不到頁面'), 404
+    """處理 404 頁面未找到錯誤"""
+    return render_template('error.html', error="找不到請求的頁面。"), 404
 
 @app.errorhandler(500)
 def internal_server_error(e):
-    return render_template('error.html', error='伺服器內部錯誤'), 500
+    """處理 500 內部伺服器錯誤"""
+    # 記錄詳細的錯誤信息
+    import traceback
+    error_traceback = traceback.format_exc()
+    logger.error(f"伺服器內部錯誤: {error_traceback}")
+    
+    # 返回友好的錯誤頁面
+    return render_template('error.html', error="伺服器內部錯誤，請稍後再試。管理員已收到通知。"), 500
 
 # 設置安全相關的頭部信息
 @app.after_request
@@ -686,56 +702,64 @@ def threads_home():
 
 @app.route('/movies/threads')
 def threads_movies():
-    search = request.args.get('search', '')
-    category = request.args.get('category', '')
-    sort_by = request.args.get('sort', 'date')
-    page = int(request.args.get('page', 1))
-    per_page = 20  # Threads風格應顯示更多項目
-    
-    # 獲取電影數據
-    db = initialize_firebase()
-    query = db.collection('movies')
-    
-    # 應用過濾器和排序
-    if search:
-        query = query.where('title', '>=', search).where('title', '<=', search + '\uf8ff')
-    if category:
-        query = query.where('category', '==', category)
-    
-    if sort_by == 'rating':
-        query = query.order_by('rating', direction=firestore.Query.DESCENDING)
-    elif sort_by == 'date':
-        query = query.order_by('date', direction=firestore.Query.DESCENDING)
-    elif sort_by == 'likes':
-        query = query.order_by('likes_count', direction=firestore.Query.DESCENDING)
-    
-    # 分頁處理
-    total_docs = len(query.get())
-    total_pages = (total_docs + per_page - 1) // per_page
-    offset = (page - 1) * per_page
-    query = query.limit(per_page).offset(offset)
-    
-    movies = []
-    for doc in query.get():
-        movie_data = doc.to_dict()
-        movie_data['id'] = doc.id
-        movie_data['likes_count'] = count_likes(doc.id)
+    try:
+        search = request.args.get('search', '')
+        category = request.args.get('category', '')
+        sort_by = request.args.get('sort', 'rating')
+        page = int(request.args.get('page', 1))
+        per_page = 12
         
-        # 標記用戶是否已喜歡
-        user_id = session.get('user_id')
-        if user_id:
-            movie_data['user_liked'] = check_user_liked(user_id, doc.id)
+        # 獲取電影數據
+        db = initialize_firebase()
+        query = db.collection('movies')
         
-        movies.append(movie_data)
-    
-    pagination = {
-        'page': page, 
-        'pages': total_pages,
-        'has_prev': page > 1,
-        'has_next': page < total_pages
-    }
-    
-    return render_template('movies_threads.html', movies=movies, pagination=pagination)
+        # 應用過濾器
+        if search:
+            query = query.where('title', '>=', search).where('title', '<=', search + '\uf8ff')
+        if category:
+            query = query.where('category', '==', category)
+        
+        # 應用排序
+        if sort_by == 'rating':
+            query = query.order_by('rating', direction=firestore.Query.DESCENDING)
+        elif sort_by == 'date':
+            query = query.order_by('date', direction=firestore.Query.DESCENDING)
+        
+        # 計算總文檔數量
+        all_docs = list(query.get())
+        total_docs = len(all_docs)
+        total_pages = (total_docs + per_page - 1) // per_page
+        
+        # 分頁處理
+        start_idx = (page - 1) * per_page
+        end_idx = min(start_idx + per_page, total_docs)
+        
+        movies = []
+        for doc in all_docs[start_idx:end_idx]:
+            movie_data = doc.to_dict()
+            movie_data['id'] = doc.id
+            
+            # 獲取喜歡數量
+            movie_data['likes_count'] = count_likes(doc.id)
+            
+            # 如果用戶登入，標記用戶是否已喜歡
+            user_id = session.get('user_id')
+            if user_id:
+                movie_data['user_liked'] = check_user_liked(user_id, doc.id)
+            
+            movies.append(movie_data)
+        
+        pagination = {
+            'page': page, 
+            'pages': total_pages,
+            'has_prev': page > 1,
+            'has_next': page < total_pages
+        }
+        
+        return render_template('movies_threads.html', movies=movies, pagination=pagination)
+    except Exception as e:
+        logger.error(f"Threads風格電影列表錯誤: {str(e)}")
+        return render_template('error.html', error=str(e)), 500
 
 @app.route('/movie/<movie_id>/threads')
 def threads_movie_detail(movie_id):
@@ -781,24 +805,34 @@ def threads_movie_detail(movie_id):
 @login_required
 def post_api():
     try:
+        # 檢查請求
+        if not request.is_json:
+            return jsonify({'success': False, 'error': '需要 JSON 格式'}), 400
+            
         data = request.json
-        text = data.get('text', '').strip()
-        movie_id = data.get('movie_id')
-        image_url = data.get('image_url')
+        text = data.get('text', '').strip() if data else ''
+        movie_id = data.get('movie_id') if data else None
+        image_url = data.get('image_url') if data else None
         
+        # 檢查內容
         if not text and not image_url:
-            return jsonify({'success': False, 'error': '內容不能為空'})
+            return jsonify({'success': False, 'error': '內容不能為空'}), 400
         
+        # 檢查用戶會話
         user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'success': False, 'error': '請先登入'}), 401
+            
+        # 創建貼文
         post = create_post(user_id, text, movie_id, image_url)
         
-        if post:
-            return jsonify({'success': True, 'post': post})
-        else:
-            return jsonify({'success': False, 'error': '發佈失敗，請稍後再試'})
+        if not post:
+            return jsonify({'success': False, 'error': '發佈失敗，請稍後再試'}), 500
+            
+        return jsonify({'success': True, 'post': post})
     except Exception as e:
         logger.error(f"發佈貼文錯誤: {str(e)}")
-        return jsonify({'success': False, 'error': str(e)})
+        return jsonify({'success': False, 'error': f'處理請求時出錯: {str(e)}'}), 500
 
 @app.route('/api/upload-image', methods=['POST'])
 @login_required
@@ -848,6 +882,8 @@ def debug_info():
     }
     
     return render_template('debug.html', info=info)
+
+app.jinja_env.undefined = jinja2.Undefined  # 允許未定義的變量
 
 if __name__ == "__main__":
     app.run(debug=True)
