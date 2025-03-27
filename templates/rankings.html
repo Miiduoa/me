@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}電影排行榜 - 顧晉瑋的網站{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="page-header text-center rounded bg-light p-4 mb-4">
+        <h1><i class="fas fa-trophy me-2"></i>電影排行榜</h1>
+        <p class="lead">根據觀眾評分和喜歡數量綜合排名</p>
+    </div>
+    
+    {% if movies %}
+    <div class="row g-4">
+        {% for movie in movies %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card h-100 position-relative">
+                <div class="position-absolute top-0 start-0 p-2">
+                    <div class="badge bg-primary rounded-pill fs-5 px-3 py-2">
+                        #{{ loop.index }}
+                    </div>
+                </div>
+                
+                {% if movie.poster %}
+                <img src="{{ movie.poster }}" class="card-img-top" alt="{{ movie.title }}">
+                {% else %}
+                <div class="bg-light p-5 text-center">
+                    <i class="fas fa-film fa-3x text-secondary"></i>
+                </div>
+                {% endif %}
+                
+                <div class="card-body">
+                    <h5 class="card-title">{{ movie.title }}</h5>
+                    <div class="d-flex justify-content-between mb-3">
+                        <div>
+                            <i class="fas fa-star text-warning me-1"></i> {{ movie.rating }}
+                        </div>
+                        <div>
+                            <i class="fas fa-heart text-danger me-1"></i> {{ movie.likes_count }}
+                        </div>
+                    </div>
+                    <a href="{{ url_for('movie_detail', movie_id=movie.id) }}" class="btn btn-primary w-100">查看詳情</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="alert alert-info text-center">
+        <i class="fas fa-info-circle me-2"></i> 排行榜數據尚未生成，請稍後再來查看
+    </div>
+    {% endif %}
+</div>
+{% endblock %} 

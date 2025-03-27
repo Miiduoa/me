@@ -3,39 +3,81 @@
 {% block title %}首頁 - 顧晉瑋的網站{% endblock %}
 
 {% block content %}
-<div class="jumbotron">
-    <h1 class="display-4">歡迎來到顧晉瑋的網站</h1>
-    <p class="lead">這是一個使用Flask、Bootstrap和Firebase構建的動態網站。</p>
-    <hr class="my-4">
-    <p>探索以下功能：</p>
+<!-- 頂部橫幅 -->
+<div class="p-4 p-md-5 mb-4 text-white rounded bg-dark">
     <div class="row">
-        <div class="col-md-4 mb-3">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">顯示日期時間</h5>
-                    <p class="card-text">查看當前的日期和時間。</p>
-                    <a href="/today" class="btn btn-primary">查看</a>
+        <div class="col-md-8 px-0">
+            <h1 class="display-4 fw-bold">歡迎來到顧晉瑋的個人網站</h1>
+            <p class="lead my-3">這是一個使用Flask和Firebase開發的個人網站，展示了最新電影資訊和我的個人作品。</p>
+            <p class="lead mb-0"><a href="/about" class="text-white fw-bold">了解更多關於我的資訊 <i class="fas fa-arrow-right"></i></a></p>
+        </div>
+    </div>
+</div>
+
+<!-- 功能區塊 -->
+<div class="row g-4 mb-5">
+    <div class="col-md-4">
+        <div class="card h-100 text-center border-0 shadow-sm">
+            <div class="card-body">
+                <div class="p-3 mb-3 bg-primary text-white rounded-circle d-inline-block">
+                    <i class="fas fa-film fa-2x"></i>
                 </div>
+                <h3 class="card-title">最新電影</h3>
+                <p class="card-text">瀏覽最新上映的電影資訊，包含評分和簡介，使用網路爬蟲技術自動更新。</p>
+                <a href="/movies" class="btn btn-primary">查看電影 <i class="fas fa-arrow-right ms-1"></i></a>
             </div>
         </div>
-        <div class="col-md-4 mb-3">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">個人簡介</h5>
-                    <p class="card-text">了解更多關於顧晉瑋的信息。</p>
-                    <a href="/about" class="btn btn-primary">了解更多</a>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 text-center border-0 shadow-sm">
+            <div class="card-body">
+                <div class="p-3 mb-3 bg-success text-white rounded-circle d-inline-block">
+                    <i class="fas fa-user fa-2x"></i>
                 </div>
+                <h3 class="card-title">關於我</h3>
+                <p class="card-text">了解更多關於我的個人資訊、學習經歷和專業技能。展示我的作品和項目經驗。</p>
+                <a href="/about" class="btn btn-success">個人簡介 <i class="fas fa-arrow-right ms-1"></i></a>
             </div>
         </div>
-        <div class="col-md-4 mb-3">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">帳號管理</h5>
-                    <p class="card-text">登入或創建新帳號。</p>
-                    <a href="/account" class="btn btn-primary">進入</a>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100 text-center border-0 shadow-sm">
+            <div class="card-body">
+                <div class="p-3 mb-3 bg-info text-white rounded-circle d-inline-block">
+                    <i class="fas fa-calendar-day fa-2x"></i>
                 </div>
+                <h3 class="card-title">現在時間</h3>
+                <p class="card-text">顯示當前臺灣時間，使用Python的datetime模組，展示後端開發能力。</p>
+                <a href="/today" class="btn btn-info text-white">查看時間 <i class="fas fa-arrow-right ms-1"></i></a>
             </div>
         </div>
     </div>
 </div>
+
+<!-- 電影精選區 -->
+{% if movies %}
+<h2 class="border-bottom pb-2 mb-4"><i class="fas fa-star me-2"></i>精選電影</h2>
+<div class="row g-4">
+    {% for movie in movies[:3] %}
+    <div class="col-md-4">
+        <div class="card h-100 shadow-sm">
+            {% if movie.poster %}
+            <img src="{{ movie.poster }}" class="card-img-top" alt="{{ movie.title }}">
+            {% endif %}
+            <div class="card-body">
+                <h5 class="card-title">{{ movie.title }}</h5>
+                <p class="card-text">
+                    <small class="text-muted">上映日期: {{ movie.date }}</small><br>
+                    <small class="text-muted">評分: {{ movie.rating }}</small>
+                </p>
+                <a href="{{ url_for('movie_detail', movie_id=movie.id) }}" class="btn btn-sm btn-primary">查看詳情</a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+<div class="text-center mt-4">
+    <a href="/movies" class="btn btn-outline-primary">查看更多電影 <i class="fas fa-arrow-right ms-1"></i></a>
+</div>
+{% endif %}
 {% endblock %} 

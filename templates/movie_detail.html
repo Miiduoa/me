@@ -3,39 +3,243 @@
 {% block title %}{{ movie.title }} - 顧晉瑋的網站{% endblock %}
 
 {% block content %}
+<nav aria-label="breadcrumb" class="mb-4">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">首頁</a></li>
+        <li class="breadcrumb-item"><a href="/movies">電影</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ movie.title }}</li>
+    </ol>
+</nav>
+
 <div class="row">
-    <div class="col-md-4">
-        {% if movie.poster %}
-        <img src="{{ movie.poster }}" class="img-fluid rounded" alt="{{ movie.title }}">
-        {% endif %}
-    </div>
-    <div class="col-md-8">
-        <h1>{{ movie.title }}</h1>
-        <p class="text-muted">上映日期: {{ movie.date }}</p>
-        <p class="text-muted">評分: {{ movie.rating }}</p>
+    <div class="col-md-4 mb-4 mb-md-0">
+        <div class="card shadow">
+            {% if movie.poster %}
+            <img src="{{ movie.poster }}" class="card-img-top img-fluid" alt="{{ movie.title }}">
+            {% else %}
+            <div class="bg-light p-5 text-center">
+                <i class="fas fa-film fa-4x text-secondary"></i>
+                <p class="mt-3">無海報</p>
+            </div>
+            {% endif %}
+            <div class="card-body bg-light">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0"><i class="fas fa-star text-warning me-1"></i> {{ movie.rating }}</h5>
+                        <small class="text-muted">用戶評分</small>
+                    </div>
+                    <div class="text-end">
+                        <h5 class="mb-0"><i class="fas fa-heart text-danger me-1"></i> {{ likes_count }}</h5>
+                        <small class="text-muted">人喜歡</small>
+                    </div>
+                </div>
+            </div>
+        </div>
         
-        <div class="d-flex align-items-center mb-3">
-            <span class="me-2">
-                <i class="fas fa-heart {% if user_liked %}text-danger{% else %}text-secondary{% endif %}"></i>
-                {{ likes_count }} 人喜歡
-            </span>
-            
+        <div class="mt-3">
             {% if session.get('user_id') %}
-            <form action="{{ url_for('like_movie', movie_id=movie.id) }}" method="POST">
-                <button type="submit" class="btn btn-sm btn-{% if user_liked %}danger{% else %}outline-danger{% endif %}">
-                    {% if user_liked %}取消喜歡{% else %}喜歡{% endif %}
+            <form action="{{ url_for('like_movie', movie_id=movie.id) }}" method="POST" class="mb-3">
+                <button type="submit" class="btn btn-{{ 'danger' if user_liked else 'outline-danger' }} w-100">
+                    <i class="fas fa-heart me-1"></i> {{ '取消喜歡' if user_liked else '喜歡電影' }}
                 </button>
             </form>
             {% else %}
-            <a href="{{ url_for('auth.login') }}" class="btn btn-sm btn-outline-primary">登入後可點讚</a>
+            <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary w-100 mb-3">
+                <i class="fas fa-sign-in-alt me-1"></i> 登入後可點讚
+            </a>
+            {% endif %}
+            
+            {% if movie.link %}
+            <a href="{{ movie.link }}" target="_blank" class="btn btn-outline-secondary w-100 mb-3">
+                <i class="fas fa-external-link-alt me-1"></i> 查看原始資料
+            </a>
             {% endif %}
         </div>
+    </div>
+    
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <h1 class="card-title display-6 mb-3">{{ movie.title }}</h1>
+                
+                <div class="mb-4">
+                    <span class="badge bg-primary me-2"><i class="fas fa-calendar me-1"></i> {{ movie.date }}</span>
+                    {% if movie.category %}
+                    <span class="badge bg-secondary"><i class="fas fa-tag me-1"></i> {{ movie.category }}</span>
+                    {% endif %}
+                </div>
+                
+                {% if movie.description %}
+                <h4>劇情簡介</h4>
+                <p class="card-text">{{ movie.description }}</p>
+                {% endif %}
+            </div>
+        </div>
         
-        {% if movie.link %}
-        <a href="{{ movie.link }}" target="_blank" class="btn btn-primary">查看原始資料</a>
-        {% endif %}
+        <div class="card mt-4 shadow-sm">
+            <div class="card-header bg-light">
+                <h4 class="mb-0"><i class="fas fa-info-circle me-2"></i>電影資訊</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% if movie.director %}
+                    <div class="col-md-6 mb-3">
+                        <strong><i class="fas fa-video me-1"></i> 導演:</strong> {{ movie.director }}
+                    </div>
+                    {% endif %}
+                    
+                    {% if movie.actors %}
+                    <div class="col-md-6 mb-3">
+                        <strong><i class="fas fa-users me-1"></i> 演員:</strong> {{ movie.actors }}
+                    </div>
+                    {% endif %}
+                    
+                    <div class="col-md-6 mb-3">
+                        <strong><i class="fas fa-calendar-alt me-1"></i> 上映日期:</strong> {{ movie.date }}
+                    </div>
+                    
+                    <div class="col-md-6 mb-3">
+                        <strong><i class="fas fa-star me-1"></i> 評分:</strong> {{ movie.rating }}
+                    </div>
+                </div>
+            </div>
+        </div>
         
-        <a href="{{ url_for('movies') }}" class="btn btn-secondary">返回列表</a>
+        <div class="card mt-4 shadow-sm">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h4 class="mb-0"><i class="fas fa-comments me-2"></i>觀眾評論</h4>
+                <span class="badge bg-primary rounded-pill" id="comments-count">{{ comments|length }}</span>
+            </div>
+            <div class="card-body">
+                {% if session.get('user_id') %}
+                <form action="{{ url_for('add_comment', movie_id=movie.id) }}" method="POST" class="mb-4">
+                    <div class="mb-3">
+                        <label for="comment" class="form-label">發表評論</label>
+                        <textarea class="form-control" id="comment" name="comment" rows="3" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-paper-plane me-1"></i> 發表評論
+                    </button>
+                </form>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-1"></i> 請<a href="{{ url_for('auth.login') }}" class="alert-link">登入</a>後發表評論
+                </div>
+                {% endif %}
+                
+                <div id="comments-container">
+                    {% if comments %}
+                        {% for comment in comments %}
+                        <div class="card mb-3 border-0 bg-light">
+                            <div class="card-body">
+                                <div class="d-flex">
+                                    <div class="avatar-circle-sm me-3">
+                                        <span class="avatar-text-sm">{{ comment.userName[:1] }}</span>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <h6 class="mb-0">{{ comment.userName }}</h6>
+                                            <small class="text-muted">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') if comment.created_at else '' }}</small>
+                                        </div>
+                                        <p class="mb-0">{{ comment.text }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center py-4" id="no-comments">
+                            <i class="fas fa-comment-slash fa-2x text-muted mb-3"></i>
+                            <p class="mb-0">目前還沒有評論</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-4">
+            <a href="{{ url_for('movies') }}" class="btn btn-outline-primary">
+                <i class="fas fa-arrow-left me-1"></i> 返回電影列表
+            </a>
+        </div>
     </div>
 </div>
+
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-functions.js"></script>
+<script>
+  // 初始化 Firebase
+  const firebaseConfig = {
+    apiKey: "AIzaSyA74yCIdADHUNyeWAIrPg5jDLd7vHYdMIY",
+    authDomain: "project-7332910669653362321.firebaseapp.com",
+    projectId: "project-7332910669653362321",
+    storageBucket: "project-7332910669653362321.firebasestorage.app",
+    messagingSenderId: "510920038201",
+    appId: "1:510920038201:web:f7396cad3ff1c407defae8",
+    measurementId: "G-SLTJQRT9QD"
+  };
+  firebase.initializeApp(firebaseConfig);
+  
+  // 追蹤電影查看
+  const movieId = "{{ movie.id }}";
+  const trackMovieView = firebase.functions().httpsCallable('trackMovieView');
+  trackMovieView({ movieId })
+    .then(result => console.log('View tracking success'))
+    .catch(error => console.error('View tracking error:', error));
+</script>
+
+<script>
+// 實時評論更新
+const db = firebase.firestore();
+const commentsRef = db.collection('movies').doc('{{ movie.id }}').collection('comments').orderBy('created_at', 'desc');
+
+// 監聽實時更新
+commentsRef.onSnapshot((snapshot) => {
+    let changes = snapshot.docChanges();
+    let commentsCount = parseInt(document.getElementById('comments-count').textContent);
+    
+    changes.forEach(change => {
+        if (change.type === 'added') {
+            // 新評論被添加
+            const comment = change.doc.data();
+            const timestamp = comment.created_at ? new Date(comment.created_at.toDate()).toLocaleString('zh-TW') : '';
+            
+            // 創建新評論元素
+            const commentElement = document.createElement('div');
+            commentElement.className = 'card mb-3 border-0 bg-light';
+            commentElement.id = `comment-${change.doc.id}`;
+            commentElement.innerHTML = `
+                <div class="card-body">
+                    <div class="d-flex">
+                        <div class="avatar-circle-sm me-3">
+                            <span class="avatar-text-sm">${comment.userName.charAt(0)}</span>
+                        </div>
+                        <div class="flex-grow-1">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="mb-0">${comment.userName}</h6>
+                                <small class="text-muted">${timestamp}</small>
+                            </div>
+                            <p class="mb-0">${comment.text}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // 插入到評論容器
+            const commentsContainer = document.getElementById('comments-container');
+            const noComments = document.getElementById('no-comments');
+            
+            if (noComments) {
+                commentsContainer.removeChild(noComments);
+            }
+            
+            commentsContainer.insertBefore(commentElement, commentsContainer.firstChild);
+            commentsCount++;
+        }
+    });
+    
+    // 更新評論計數
+    document.getElementById('comments-count').textContent = commentsCount;
+});
+</script>
 {% endblock %} 

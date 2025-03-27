@@ -1,8 +1,9 @@
 /* 基本樣式設定 */
 body {
-    font-family: 'Microsoft JhengHei', '微軟正黑體', Arial, sans-serif;
-    background-color: #f5f5f5;
+    font-family: 'Noto Sans TC', sans-serif;
     color: #333;
+    line-height: 1.6;
+    background-color: #f8f9fa;
 }
 
 /* 導航欄樣式覆蓋 */
@@ -13,13 +14,20 @@ body {
 
 /* 卡片樣式增強 */
 .card {
-    border-radius: 8px;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-    margin-bottom: 20px;
+    transition: all 0.3s ease;
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    height: 100%;
 }
 
-.card-header {
-    border-radius: 8px 8px 0 0;
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.card-img-top {
+    height: 280px;
+    object-fit: cover;
 }
 
 /* 表單樣式增強 */
@@ -29,19 +37,124 @@ body {
 }
 
 /* 按鈕樣式增強 */
+.btn {
+    border-radius: 0.25rem;
+    padding: 0.5rem 1rem;
+    transition: all 0.3s ease;
+}
+
 .btn-primary {
-    background-color: #007bff;
-    border-color: #007bff;
-    transition: all 0.3s;
+    background-color: #0d6efd;
+    border-color: #0d6efd;
 }
 
 .btn-primary:hover {
-    background-color: #0069d9;
-    border-color: #0062cc;
+    background-color: #0b5ed7;
+    border-color: #0a58ca;
     transform: translateY(-2px);
+}
+
+/* 鏈接效果 */
+a {
+    transition: all 0.3s ease;
+}
+
+/* 導航欄增強 */
+.navbar {
+    transition: all 0.3s ease;
+}
+
+.navbar-dark .navbar-nav .nav-link {
+    color: rgba(255, 255, 255, 0.85);
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 0.25rem;
+    transition: all 0.3s ease;
+}
+
+.navbar-dark .navbar-nav .nav-link:hover,
+.navbar-dark .navbar-nav .nav-link.active {
+    color: #fff;
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* 頁面標題 */
+.page-header {
+    padding: 2rem 0;
+    margin-bottom: 2rem;
+    background-color: #f1f5f9;
+    border-radius: 0.5rem;
+}
+
+.page-header h1 {
+    font-weight: 700;
+    color: #1a202c;
+}
+
+/* 響應式調整 */
+@media (max-width: 767.98px) {
+    .card-img-top {
+        height: 220px;
+    }
+    
+    .page-header {
+        padding: 1.5rem 0;
+    }
+    
+    h1 {
+        font-size: 1.8rem;
+    }
+    
+    h2 {
+        font-size: 1.5rem;
+    }
+}
+
+/* 響應式表單 */
+.responsive-form {
+    max-width: 100%;
+    padding: 20px;
+}
+
+@media (min-width: 768px) {
+    .responsive-form {
+        max-width: 80%;
+        margin: 0 auto;
+    }
+}
+
+@media (min-width: 992px) {
+    .responsive-form {
+        max-width: 60%;
+    }
+}
+
+/* 動畫效果 */
+.fade-in {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
 /* 頁腳樣式 */
 footer {
-    margin-top: 30px;
+    margin-top: auto;
+}
+
+footer a:hover {
+    opacity: 0.8;
+}
+
+/* 按鈕處理中狀態 */
+.btn-processing {
+    cursor: not-allowed;
+    opacity: 0.8;
+}
+
+/* 按鈕點擊時的視覺反饋 */
+.btn:active {
+    transform: scale(0.98);
 } 

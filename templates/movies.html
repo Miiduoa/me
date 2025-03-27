@@ -3,56 +3,79 @@
 {% block title %}電影列表 - 顧晉瑋的網站{% endblock %}
 
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1>最新電影</h1>
-    <a href="/update_movies" class="btn btn-primary">更新電影資料</a>
+<div class="page-header text-center rounded bg-light p-4 mb-4">
+    <h1><i class="fas fa-film me-2"></i>最新電影</h1>
+    <p class="lead">瀏覽最新上映的電影資訊，包含評分和簡介。</p>
 </div>
 
-<div class="mb-4">
-    <form method="GET" action="/movies" class="row g-3">
-        <div class="col-md-8">
-            <input type="text" name="search" class="form-control" placeholder="搜索電影..." value="{{ request.args.get('search', '') }}">
-        </div>
-        <div class="col-md-4">
-            <button type="submit" class="btn btn-primary w-100">搜索</button>
-        </div>
-    </form>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <a href="/update_movies" class="btn btn-primary">
+        <i class="fas fa-sync-alt me-1"></i> 更新電影資料
+    </a>
+    
+    <div class="d-flex">
+        <form method="GET" action="/movies" class="d-flex">
+            <input type="text" name="search" class="form-control me-2" placeholder="搜索電影..." 
+                   value="{{ request.args.get('search', '') }}" aria-label="搜索電影">
+            <button type="submit" class="btn btn-outline-primary">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+    </div>
 </div>
+
+{% if search_query %}
+<div class="alert alert-info mb-4">
+    <i class="fas fa-search me-1"></i> 搜索結果：「{{ search_query }}」
+    <a href="/movies" class="float-end text-decoration-none">清除搜索</a>
+</div>
+{% endif %}
 
 {% if movies %}
-<div class="row">
+<div class="row g-4">
     {% for movie in movies %}
-    <div class="col-md-4 mb-4">
-        <div class="card h-100">
+    <div class="col-sm-6 col-md-4 col-lg-4 mb-4">
+        <div class="card h-100 shadow-sm">
             {% if movie.poster %}
             <img src="{{ movie.poster }}" class="card-img-top" alt="{{ movie.title }}">
+            {% else %}
+            <div class="bg-light p-5 text-center">
+                <i class="fas fa-film fa-3x text-secondary"></i>
+            </div>
             {% endif %}
-            <div class="card-body">
-                <h5 class="card-title">{{ movie.title }}</h5>
-                <p class="card-text">
-                    <small class="text-muted">上映日期: {{ movie.date }}</small><br>
-                    <small class="text-muted">評分: {{ movie.rating }}</small>
-                </p>
-                {% if movie.link %}
-                <a href="{{ movie.link }}" target="_blank" class="btn btn-outline-primary btn-sm">原始資料</a>
-                {% endif %}
-                <a href="{{ url_for('movie_detail', movie_id=movie.id) }}" class="btn btn-primary btn-sm">查看詳情</a>
+            <div class="card-body d-flex flex-column">
+                <h5 class="card-title text-truncate">{{ movie.title }}</h5>
+                <div class="mb-2">
+                    <span class="badge bg-primary me-1">
+                        <i class="fas fa-star me-1"></i>{{ movie.rating }}
+                    </span>
+                    <small class="text-muted">{{ movie.date }}</small>
+                </div>
+                <div class="mt-auto">
+                    <div class="btn-group w-100" role="group">
+                        <a href="{{ url_for('movie_detail', movie_id=movie.id) }}" class="btn btn-primary">
+                            <i class="fas fa-info-circle me-1"></i> 詳情
+                        </a>
+                        {% if movie.link %}
+                        <a href="{{ movie.link }}" target="_blank" class="btn btn-outline-secondary">
+                            <i class="fas fa-external-link-alt"></i>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
             </div>
         </div>
     </div>
     {% endfor %}
 </div>
-{% else %}
-<div class="alert alert-info">
-    目前沒有電影資料，請點擊"更新電影資料"按鈕爬取最新資訊。
-</div>
-{% endif %}
 
 {% if total_pages > 1 %}
-<nav aria-label="Page navigation">
+<nav aria-label="Page navigation" class="my-4">
     <ul class="pagination justify-content-center">
         <li class="page-item {% if page == 1 %}disabled{% endif %}">
-            <a class="page-link" href="{{ url_for('movies', page=page-1, search=search_query) }}" tabindex="-1">上一頁</a>
+            <a class="page-link" href="{{ url_for('movies', page=page-1, search=search_query) }}" aria-label="上一頁">
+                <span aria-hidden="true"><i class="fas fa-chevron-left"></i></span>
+            </a>
         </li>
         
         {% for p in range(1, total_pages + 1) %}
@@ -62,9 +85,22 @@
         {% endfor %}
         
         <li class="page-item {% if page == total_pages %}disabled{% endif %}">
-            <a class="page-link" href="{{ url_for('movies', page=page+1, search=search_query) }}">下一頁</a>
+            <a class="page-link" href="{{ url_for('movies', page=page+1, search=search_query) }}" aria-label="下一頁">
+                <span aria-hidden="true"><i class="fas fa-chevron-right"></i></span>
+            </a>
         </li>
     </ul>
 </nav>
+{% endif %}
+
+{% else %}
+<div class="alert alert-info text-center p-5">
+    <i class="fas fa-info-circle fa-2x mb-3"></i>
+    <h4>目前沒有電影資料</h4>
+    <p>請點擊"更新電影資料"按鈕爬取最新資訊。</p>
+    <a href="/update_movies" class="btn btn-primary mt-2">
+        <i class="fas fa-sync-alt me-1"></i> 更新電影資料
+    </a>
+</div>
 {% endif %}
 {% endblock %} 

@@ -2,70 +2,203 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
     <title>{% block title %}顧晉瑋的網站{% endblock %}</title>
+    <!-- 引入字體 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Font Awesome 圖標 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- 自定義 CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- SEO元標籤 -->
     <meta name="description" content="顧晉瑋的個人網站，提供最新電影資訊與個人作品展示">
     <meta name="keywords" content="顧晉瑋, 網站開發, 電影資訊, Flask, Firebase">
     <meta name="author" content="顧晉瑋">
     <link rel="canonical" href="{{ request.url }}">
+    <!-- Firebase Performance Monitoring -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-performance.js"></script>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <!-- 改進的導航欄 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
         <div class="container">
-            <a class="navbar-brand" href="/">顧晉瑋的網站</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <a class="navbar-brand d-flex align-items-center" href="/">
+                <i class="fas fa-film me-2"></i>
+                <span>顧晉瑋的網站</span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="/">首頁</a>
+                        <a class="nav-link {{ 'active' if request.path == '/' }}" href="/"><i class="fas fa-home me-1"></i> 首頁</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/today">現在時間</a>
+                        <a class="nav-link {{ 'active' if request.path == '/today' }}" href="/today"><i class="fas fa-calendar-day me-1"></i> 現在時間</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="/about">關於我</a>
+                        <a class="nav-link {{ 'active' if request.path == '/about' }}" href="/about"><i class="fas fa-user me-1"></i> 關於我</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {{ 'active' if request.path.startswith('/movies') }}" href="/movies"><i class="fas fa-film me-1"></i> 最新電影</a>
                     </li>
                     {% if session.get('user_id') %}
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
-                            {{ session.get('user_name') }}
+                        <a class="nav-link position-relative" href="#" id="notificationsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-bell"></i>
+                            <span id="notification-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">0</span>
                         </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/profile">個人資料</a></li>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="notificationsDropdown" id="notifications-container">
+                            <li><div class="dropdown-item text-center">載入通知中...</div></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-user-circle me-1"></i> {{ session.get('user_name') }}
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="navbarDropdown">
+                            <li><a class="dropdown-item" href="/profile"><i class="fas fa-id-card me-1"></i> 個人資料</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="/logout">登出</a></li>
+                            <li><a class="dropdown-item" href="/logout"><i class="fas fa-sign-out-alt me-1"></i> 登出</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-globe me-1"></i> 語言
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
+                            <li>
+                                <form action="{{ url_for('set_language') }}" method="post" id="zh-tw-form">
+                                    <input type="hidden" name="language" value="zh-TW">
+                                    <button type="submit" class="dropdown-item">繁體中文</button>
+                                </form>
+                            </li>
+                            <li>
+                                <form action="{{ url_for('set_language') }}" method="post" id="en-form">
+                                    <input type="hidden" name="language" value="en">
+                                    <button type="submit" class="dropdown-item">English</button>
+                                </form>
+                            </li>
                         </ul>
                     </li>
                     {% else %}
                     <li class="nav-item">
-                        <a class="nav-link" href="/login">登入</a>
+                        <a class="nav-link {{ 'active' if request.path == '/login' }}" href="/login"><i class="fas fa-sign-in-alt me-1"></i> 登入</a>
                     </li>
                     {% endif %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="/movies">最新電影</a>
-                    </li>
                 </ul>
             </div>
         </div>
     </nav>
 
+    <!-- 主要內容區域 -->
     <main class="container py-4">
         {% block content %}{% endblock %}
     </main>
 
-    <footer class="bg-dark text-white py-3">
-        <div class="container text-center">
-            <p>© 2023 顧晉瑋. 資訊管理課程專案.</p>
+    <!-- 改進的頁腳 -->
+    <footer class="bg-dark text-white py-4 mt-5">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6 mb-3 mb-md-0">
+                    <h5><i class="fas fa-film me-2"></i> 顧晉瑋的網站</h5>
+                    <p class="small">一個展示最新電影資訊的個人網站，使用Flask和Firebase開發。</p>
+                </div>
+                <div class="col-md-3 mb-3 mb-md-0">
+                    <h5>快速連結</h5>
+                    <ul class="list-unstyled">
+                        <li><a href="/" class="text-white text-decoration-none"><i class="fas fa-chevron-right me-1"></i> 首頁</a></li>
+                        <li><a href="/movies" class="text-white text-decoration-none"><i class="fas fa-chevron-right me-1"></i> 電影</a></li>
+                        <li><a href="/about" class="text-white text-decoration-none"><i class="fas fa-chevron-right me-1"></i> 關於我</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-3">
+                    <h5>聯絡資訊</h5>
+                    <ul class="list-unstyled">
+                        <li><i class="fas fa-envelope me-1"></i> info@example.com</li>
+                        <li><i class="fas fa-phone me-1"></i> (02) 1234-5678</li>
+                    </ul>
+                </div>
+            </div>
+            <hr class="my-3">
+            <div class="text-center">
+                <p class="mb-0">© 2023 顧晉瑋. 資訊管理課程專案.</p>
+            </div>
         </div>
     </footer>
 
+    <!-- JavaScript 庫 -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- 自定義 JavaScript -->
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    <!-- 在頁面底部添加 -->
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database.js"></script>
+    <script>
+      // 初始化 Firebase
+      const firebaseConfig = {
+        apiKey: "AIzaSyA74yCIdADHUNyeWAIrPg5jDLd7vHYdMIY",
+        authDomain: "project-7332910669653362321.firebaseapp.com",
+        projectId: "project-7332910669653362321",
+        storageBucket: "project-7332910669653362321.firebasestorage.app",
+        messagingSenderId: "510920038201",
+        appId: "1:510920038201:web:f7396cad3ff1c407defae8",
+        measurementId: "G-SLTJQRT9QD"
+      };
+      firebase.initializeApp(firebaseConfig);
+      
+      // 實時通知系統
+      const userId = "{{ session.get('user_id', '') }}";
+      if (userId) {
+        const notificationsRef = firebase.database().ref('notifications/' + userId);
+        notificationsRef.on('value', (snapshot) => {
+          const notifications = snapshot.val();
+          if (notifications) {
+            // 處理新通知
+            updateNotificationBadge(Object.keys(notifications).length);
+          }
+        });
+      }
+      
+      function updateNotificationBadge(count) {
+        const badge = document.getElementById('notification-badge');
+        if (badge) {
+          badge.textContent = count;
+          badge.style.display = count > 0 ? 'inline-block' : 'none';
+        }
+      }
+    </script>
+    <script>
+      document.addEventListener('DOMContentLoaded', function() {
+        // 初始化性能監控
+        const perf = firebase.performance();
+        
+        // 自定義跟踪
+        const pageLoadTrace = perf.trace('page_load');
+        pageLoadTrace.start();
+        
+        window.addEventListener('load', function() {
+          pageLoadTrace.stop();
+          
+          // 記錄重要指標
+          if (window.performance && window.performance.timing) {
+            const timing = window.performance.timing;
+            const responseStart = timing.responseStart - timing.navigationStart;
+            const domComplete = timing.domComplete - timing.navigationStart;
+            
+            // 將指標添加到跟踪
+            pageLoadTrace.putMetric('response_start_ms', responseStart);
+            pageLoadTrace.putMetric('dom_complete_ms', domComplete);
+          }
+        });
+      });
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html> 
