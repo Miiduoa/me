@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, Blueprint, redirect, session, flash, jsonify, make_response, url_for
 from datetime import datetime, timezone, timedelta
-from firebase_manager import authenticate_user, check_email_exists, create_user, get_all_documents, add_like, get_document, count_likes, check_user_liked, get_user_liked_movies, get_movie_recommendations, upload_user_avatar, initialize_firebase, get_with_cache, get_collection_cached, get_movie_comments, create_post, get_posts
+from firebase_manager import authenticate_user, check_email_exists, create_user, get_all_documents, add_like, get_document, count_likes, check_user_liked, get_user_liked_movies, get_movie_recommendations, upload_user_avatar, initialize_firebase, get_with_cache, get_collection_cached, get_movie_comments, create_post, get_posts, upload_to_firebase_storage
 from web_crawler import crawl_movies
 from forms import LoginForm, RegisterForm
 from functools import wraps
@@ -157,20 +157,21 @@ def account():
 def movies():
     # 檢查用戶偏好的風格
     style = session.get('style', 'traditional')
+    
     if style == 'social':
         return redirect(url_for('social_movies'))
     elif style == 'threads':
         return redirect(url_for('threads_movies'))
     
     # 以下是傳統風格的電影列表功能
-    search = request.args.get('search', '')
-    category = request.args.get('category', '')
-    sort_by = request.args.get('sort', 'rating')
-    page = int(request.args.get('page', 1))
-    per_page = 12
-    
-    # 獲取電影數據
     try:
+        search = request.args.get('search', '')
+        category = request.args.get('category', '')
+        sort_by = request.args.get('sort', 'rating')
+        page = int(request.args.get('page', 1))
+        per_page = 12
+        
+        # 獲取電影數據
         db = initialize_firebase()
         query = db.collection('movies')
         
@@ -185,10 +186,8 @@ def movies():
             query = query.order_by('rating', direction=firestore.Query.DESCENDING)
         elif sort_by == 'date':
             query = query.order_by('date', direction=firestore.Query.DESCENDING)
-        elif sort_by == 'likes':
-            query = query.order_by('likes_count', direction=firestore.Query.DESCENDING)
         
-        # 計算總文檔數量（警告：這在大型集合中效率低下）
+        # 計算總文檔數量
         all_docs = list(query.get())
         total_docs = len(all_docs)
         total_pages = (total_docs + per_page - 1) // per_page
@@ -221,7 +220,6 @@ def movies():
         
         return render_template('movies.html', movies=movies, pagination=pagination)
     except Exception as e:
-        # 記錄錯誤並顯示友好的錯誤頁面
         logger.error(f"電影列表錯誤: {str(e)}")
         return render_template('error.html', error=str(e)), 500
 
@@ -507,63 +505,65 @@ def social_home():
 
 @app.route('/movies/social')
 def social_movies():
+    # 類似傳統風格的代碼，但使用social模板
     search = request.args.get('search', '')
     category = request.args.get('category', '')
     sort_by = request.args.get('sort', 'rating')
     page = int(request.args.get('page', 1))
-    per_page = 10
+    per_page = 12
     
-    # 獲取電影數據（這裡需要修改資料庫查詢以支援分頁）
-    db = initialize_firebase()
-    query = db.collection('movies')
-    
-    # 應用過濾器
-    if search:
-        query = query.where('title', '>=', search).where('title', '<=', search + '\uf8ff')
-    if category:
-        query = query.where('category', '==', category)
-    
-    # 應用排序
-    if sort_by == 'rating':
-        query = query.order_by('rating', direction=firestore.Query.DESCENDING)
-    elif sort_by == 'date':
-        query = query.order_by('date', direction=firestore.Query.DESCENDING)
-    elif sort_by == 'likes':
-        # 這需要預先計算的字段或改用 Cloud Function
-        query = query.order_by('likes_count', direction=firestore.Query.DESCENDING)
-    
-    # 獲取總數量（用於分頁）
-    total_docs = len(query.get())
-    total_pages = (total_docs + per_page - 1) // per_page
-    
-    # 實現分頁
-    offset = (page - 1) * per_page
-    query = query.limit(per_page).offset(offset)
-    
-    movies = []
-    for doc in query.get():
-        movie_data = doc.to_dict()
-        movie_data['id'] = doc.id
+    try:
+        # 獲取電影數據
+        db = initialize_firebase()
+        query = db.collection('movies')
         
-        # 獲取喜歡數量
-        movie_data['likes_count'] = count_likes(doc.id)
+        # 應用過濾器
+        if search:
+            query = query.where('title', '>=', search).where('title', '<=', search + '\uf8ff')
+        if category:
+            query = query.where('category', '==', category)
         
-        # 標記用戶是否已喜歡（如果已登入）
-        user_id = session.get('user_id')
-        if user_id:
-            movie_data['user_liked'] = check_user_liked(user_id, doc.id)
+        # 應用排序
+        if sort_by == 'rating':
+            query = query.order_by('rating', direction=firestore.Query.DESCENDING)
+        elif sort_by == 'date':
+            query = query.order_by('date', direction=firestore.Query.DESCENDING)
         
-        movies.append(movie_data)
-    
-    # 構建分頁信息
-    pagination = {
-        'page': page,
-        'pages': total_pages,
-        'has_prev': page > 1,
-        'has_next': page < total_pages
-    }
-    
-    return render_template('movies_social.html', movies=movies, pagination=pagination)
+        # 計算總文檔數量
+        all_docs = list(query.get())
+        total_docs = len(all_docs)
+        total_pages = (total_docs + per_page - 1) // per_page
+        
+        # 分頁處理
+        start_idx = (page - 1) * per_page
+        end_idx = min(start_idx + per_page, total_docs)
+        
+        movies = []
+        for doc in all_docs[start_idx:end_idx]:
+            movie_data = doc.to_dict()
+            movie_data['id'] = doc.id
+            
+            # 獲取喜歡數量
+            movie_data['likes_count'] = count_likes(doc.id)
+            
+            # 如果用戶登入，標記用戶是否已喜歡
+            user_id = session.get('user_id')
+            if user_id:
+                movie_data['user_liked'] = check_user_liked(user_id, doc.id)
+            
+            movies.append(movie_data)
+        
+        pagination = {
+            'page': page, 
+            'pages': total_pages,
+            'has_prev': page > 1,
+            'has_next': page < total_pages
+        }
+        
+        return render_template('movies_social.html', movies=movies, pagination=pagination)
+    except Exception as e:
+        logger.error(f"社交風格電影列表錯誤: {str(e)}")
+        return render_template('error.html', error=str(e)), 500
 
 @app.route('/movie/<movie_id>/social')
 def social_movie_detail(movie_id):
@@ -830,6 +830,24 @@ def upload_image():
     except Exception as e:
         logger.error(f"圖片上傳錯誤: {str(e)}")
         return jsonify({'success': False, 'error': str(e)})
+
+@app.route('/debug')
+def debug_info():
+    """顯示調試信息的頁面"""
+    try:
+        db = initialize_firebase()
+        firebase_status = "Firebase連接正常"
+    except Exception as e:
+        firebase_status = f"Firebase錯誤: {str(e)}"
+    
+    info = {
+        "app": str(app),
+        "firebase": firebase_status,
+        "routes": [str(rule) for rule in app.url_map.iter_rules()],
+        "session": {k: session[k] for k in session}
+    }
+    
+    return render_template('debug.html', info=info)
 
 if __name__ == "__main__":
     app.run(debug=True)

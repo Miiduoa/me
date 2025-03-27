@@ -156,4 +156,99 @@
 </div>
 {% endfor %}
 
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // 圖片上傳預覽
+    document.getElementById('image-upload-btn').addEventListener('click', function() {
+        document.getElementById('post-image').click();
+    });
+    
+    document.getElementById('post-image').addEventListener('change', function(e) {
+        if (this.files && this.files[0]) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const previewImg = document.getElementById('preview-img');
+                previewImg.src = e.target.result;
+                document.getElementById('image-preview').style.display = 'block';
+            };
+            reader.readAsDataURL(this.files[0]);
+        }
+    });
+    
+    document.getElementById('remove-image').addEventListener('click', function() {
+        document.getElementById('post-image').value = '';
+        document.getElementById('image-preview').style.display = 'none';
+    });
+    
+    // 發佈貼文
+    document.getElementById('post-btn').addEventListener('click', function() {
+        const postText = document.getElementById('post-text').value.trim();
+        const imageFile = document.getElementById('post-image').files[0];
+        
+        if (!postText && !imageFile) {
+            alert('請輸入內容或選擇圖片');
+            return;
+        }
+        
+        // 禁用發佈按鈕
+        this.disabled = true;
+        this.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 發佈中...';
+        
+        // 先處理圖片上傳（如果有）
+        let uploadPromise = Promise.resolve(null);
+        
+        if (imageFile) {
+            const formData = new FormData();
+            formData.append('image', imageFile);
+            
+            uploadPromise = fetch('/api/upload-image', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    return data.url;
+                } else {
+                    throw new Error(data.error || '圖片上傳失敗');
+                }
+            });
+        }
+        
+        // 圖片上傳後發佈貼文
+        uploadPromise.then(imageUrl => {
+            return fetch('/api/post', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    text: postText,
+                    image_url: imageUrl
+                })
+            });
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // 重新載入頁面顯示新貼文
+                window.location.reload();
+            } else {
+                alert(data.error || '發佈失敗');
+                // 恢復按鈕狀態
+                document.getElementById('post-btn').disabled = false;
+                document.getElementById('post-btn').textContent = '發佈';
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('發佈失敗: ' + error.message);
+            // 恢復按鈕狀態
+            document.getElementById('post-btn').disabled = false;
+            document.getElementById('post-btn').textContent = '發佈';
+        });
+    });
+</script>
 {% endblock %} 

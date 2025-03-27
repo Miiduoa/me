@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}調試資訊 - 顧晉瑋的網站{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4>系統調試資訊</h4>
+        </div>
+        <div class="card-body">
+            <h5 class="mb-3">應用狀態</h5>
+            <pre>{{ info.app }}</pre>
+            
+            <h5 class="mb-3">Firebase狀態</h5>
+            <pre>{{ info.firebase }}</pre>
+            
+            <h5 class="mb-3">已註冊路由</h5>
+            <ul class="list-group">
+            {% for route in info.routes %}
+                <li class="list-group-item">{{ route }}</li>
+            {% endfor %}
+            </ul>
+            
+            <h5 class="mb-3">會話資訊</h5>
+            <pre>{{ info.session }}</pre>
+        </div>
+    </div>
+</div>
+{% endblock %} 
