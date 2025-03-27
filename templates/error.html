@@ -1,26 +1,36 @@
 {% extends "base.html" %}
 
-{% block title %}出錯了 - 顧晉瑋的網站{% endblock %}
+{% block title %}錯誤 - 顧晉瑋的網站{% endblock %}
 
 {% block content %}
-<div class="container py-5">
+<div class="container mt-5">
     <div class="row justify-content-center">
-        <div class="col-md-8 text-center">
-            <div class="mb-4">
-                <i class="fas fa-exclamation-circle text-danger fa-5x"></i>
-            </div>
-            <h1 class="mb-4">出現了一些問題</h1>
-            <div class="alert alert-danger">
-                <p class="mb-0">{{ error }}</p>
-            </div>
-            <p class="mb-4">很抱歉給您帶來不便。請嘗試返回或重新整理頁面。</p>
-            <div class="d-flex justify-content-center gap-3">
-                <a href="javascript:history.back()" class="btn btn-outline-primary">
-                    <i class="fas fa-arrow-left me-1"></i> 返回上一頁
-                </a>
-                <a href="/" class="btn btn-primary">
-                    <i class="fas fa-home me-1"></i> 返回首頁
-                </a>
+        <div class="col-md-8">
+            <div class="card border-danger shadow">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>發生錯誤</h4>
+                </div>
+                <div class="card-body">
+                    <p class="lead">很抱歉，處理您的請求時發生了錯誤。</p>
+                    
+                    {% if error %}
+                    <div class="alert alert-secondary">
+                        <pre class="mb-0">{{ error }}</pre>
+                    </div>
+                    {% endif %}
+                    
+                    <p>請嘗試以下操作：</p>
+                    <ul>
+                        <li>重新整理頁面</li>
+                        <li>清除瀏覽器緩存</li>
+                        <li>稍後再試</li>
+                        <li>聯絡網站管理員</li>
+                    </ul>
+                </div>
+                <div class="card-footer d-flex justify-content-between">
+                    <a href="/" class="btn btn-outline-primary"><i class="fas fa-home me-2"></i>返回首頁</a>
+                    <button onclick="window.history.back()" class="btn btn-primary"><i class="fas fa-arrow-left me-2"></i>返回上一頁</button>
+                </div>
             </div>
         </div>
     </div>

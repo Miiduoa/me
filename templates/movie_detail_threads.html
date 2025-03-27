@@ -1,0 +1,266 @@
+{% extends "base_threads.html" %}
+
+{% block title %}{{ movie.title }} - 顧晉瑋的網站{% endblock %}
+
+{% block content %}
+<!-- 電影詳情 -->
+<div class="threads-card">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h5 class="mb-0">電影詳情</h5>
+        <button onclick="window.history.back()" class="btn btn-sm btn-outline-light rounded-circle">
+            <i class="fas fa-arrow-left"></i>
+        </button>
+    </div>
+</div>
+
+<div class="thread-item">
+    <div class="thread-header">
+        <div class="avatar">
+            <i class="fas fa-film text-white"></i>
+        </div>
+        <div>
+            <p class="mb-0 fw-bold">{{ movie.title }}</p>
+            <small class="text-muted">{{ movie.date }}</small>
+        </div>
+    </div>
+    
+    {% if movie.poster %}
+    <div class="rounded overflow-hidden my-3">
+        <img src="{{ movie.poster }}" class="img-fluid w-100" alt="{{ movie.title }}">
+    </div>
+    {% endif %}
+    
+    <div class="d-flex align-items-center my-3">
+        <span class="badge bg-dark text-light border border-secondary me-2 p-2">
+            <i class="fas fa-star text-warning me-1"></i> {{ movie.rating }}
+        </span>
+        {% if movie.category %}
+        <span class="badge bg-dark text-light border border-secondary p-2">
+            <i class="fas fa-tag me-1"></i> {{ movie.category }}
+        </span>
+        {% endif %}
+        
+        {% if movie.link %}
+        <a href="{{ movie.link }}" target="_blank" class="btn btn-sm btn-outline-light ms-auto">
+            <i class="fas fa-external-link-alt me-1"></i> 原始資料
+        </a>
+        {% endif %}
+    </div>
+    
+    {% if movie.description %}
+    <p>{{ movie.description }}</p>
+    {% endif %}
+    
+    <div class="interaction-bar border-top pt-3 mt-3">
+        <div class="interaction-btn" id="like-btn" data-movie-id="{{ movie.id }}" data-liked="{{ 'true' if user_liked else 'false' }}">
+            <i class="{{ 'fas text-danger' if user_liked else 'far' }} fa-heart me-2"></i>
+            <span id="likes-count">{{ likes_count }}</span>
+        </div>
+        <div class="interaction-btn">
+            <i class="far fa-comment me-2"></i>
+            <span id="comments-count">{{ comments|length }}</span>
+        </div>
+        <div class="interaction-btn">
+            <i class="far fa-bookmark"></i>
+        </div>
+    </div>
+</div>
+
+<!-- 評論區 -->
+<div class="threads-card">
+    <h6 class="mb-3">評論區</h6>
+    
+    {% if session.get('user_id') %}
+    <div class="thread-compose border-top pt-3">
+        <div class="d-flex">
+            <div class="avatar" style="width: 36px; height: 36px;">
+                {% if user.avatar_url %}
+                <img src="{{ user.avatar_url }}" class="img-fluid" alt="用戶頭像">
+                {% else %}
+                <span class="text-white">{{ session.get('user_name', 'U')[0] }}</span>
+                {% endif %}
+            </div>
+            <div class="flex-grow-1 ms-2">
+                <textarea id="comment-text" class="thread-composer-input" placeholder="發表評論..."></textarea>
+                <div class="d-flex justify-content-end mt-2">
+                    <button id="submit-comment" class="btn-threads">發布</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="my-3 text-center">
+        <a href="{{ url_for('auth.login') }}" class="btn btn-outline-light">登入後發表評論</a>
+    </div>
+    {% endif %}
+    
+    <div id="comments-container" class="mt-4">
+        {% if comments %}
+            {% for comment in comments %}
+            <div class="thread-reply">
+                <div class="d-flex">
+                    <div class="avatar">
+                        <span class="text-white">{{ comment.userName[:1] }}</span>
+                    </div>
+                    <div class="ms-2 flex-grow-1">
+                        <div class="d-flex justify-content-between">
+                            <p class="mb-0 fw-bold">{{ comment.userName }}</p>
+                            <small class="text-muted">{{ comment.created_at|datetime }}</small>
+                        </div>
+                        <p class="mb-1">{{ comment.text }}</p>
+                        <div class="d-flex">
+                            <small class="text-muted me-3">讚</small>
+                            <small class="text-muted">回覆</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="text-center py-4" id="no-comments">
+                <p class="text-muted mb-0">還沒有評論，成為第一個評論的人</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+{% block extra_js %}
+<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-firestore.js"></script>
+<script>
+    // 點讚功能
+    document.getElementById('like-btn').addEventListener('click', function() {
+        {% if session.get('user_id') %}
+        let movieId = this.getAttribute('data-movie-id');
+        let liked = this.getAttribute('data-liked') === 'true';
+        let likeIcon = this.querySelector('i');
+        let likesCountEl = document.getElementById('likes-count');
+        let likesCount = parseInt(likesCountEl.textContent);
+        
+        // 切換喜歡狀態
+        if (liked) {
+            // 取消喜歡
+            likeIcon.classList.remove('fas', 'text-danger');
+            likeIcon.classList.add('far');
+            likesCountEl.textContent = Math.max(0, likesCount - 1);
+            this.setAttribute('data-liked', 'false');
+        } else {
+            // 添加喜歡
+            likeIcon.classList.remove('far');
+            likeIcon.classList.add('fas', 'text-danger', 'like-animation');
+            likesCountEl.textContent = likesCount + 1;
+            this.setAttribute('data-liked', 'true');
+        }
+        
+        // 發送到服務器
+        fetch('/api/like', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                movie_id: movieId,
+                action: liked ? 'unlike' : 'like'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (!data.success) {
+                // 如果操作失敗，還原UI
+                if (liked) {
+                    likeIcon.classList.remove('far');
+                    likeIcon.classList.add('fas', 'text-danger');
+                    likesCountEl.textContent = likesCount;
+                    this.setAttribute('data-liked', 'true');
+                } else {
+                    likeIcon.classList.remove('fas', 'text-danger');
+                    likeIcon.classList.add('far');
+                    likesCountEl.textContent = Math.max(0, likesCount - 1);
+                    this.setAttribute('data-liked', 'false');
+                }
+                console.error('Like operation failed:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+        {% else %}
+        window.location.href = "{{ url_for('auth.login') }}";
+        {% endif %}
+    });
+    
+    // 評論功能
+    {% if session.get('user_id') %}
+    document.getElementById('submit-comment').addEventListener('click', function() {
+        const commentText = document.getElementById('comment-text').value.trim();
+        if (!commentText) return;
+        
+        fetch('/api/comment', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                movie_id: '{{ movie.id }}',
+                text: commentText
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // 清空評論框
+                document.getElementById('comment-text').value = '';
+                
+                // 添加評論到頁面
+                addCommentToPage(data.comment);
+            } else {
+                console.error('Comment failed:', data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+    });
+    
+    function addCommentToPage(comment) {
+        const commentsContainer = document.getElementById('comments-container');
+        const noComments = document.getElementById('no-comments');
+        
+        // 如果之前沒有評論，移除"沒有評論"的提示
+        if (noComments) {
+            commentsContainer.removeChild(noComments);
+        }
+        
+        // 創建新評論元素
+        const commentHtml = `
+        <div class="thread-reply">
+            <div class="d-flex">
+                <div class="avatar">
+                    <span class="text-white">${comment.userName[0]}</span>
+                </div>
+                <div class="ms-2 flex-grow-1">
+                    <div class="d-flex justify-content-between">
+                        <p class="mb-0 fw-bold">${comment.userName}</p>
+                        <small class="text-muted">剛剛</small>
+                    </div>
+                    <p class="mb-1">${comment.text}</p>
+                    <div class="d-flex">
+                        <small class="text-muted me-3">讚</small>
+                        <small class="text-muted">回覆</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        `;
+        
+        // 插入到評論容器的頂部
+        commentsContainer.insertAdjacentHTML('afterbegin', commentHtml);
+        
+        // 更新評論計數
+        const commentsCount = document.getElementById('comments-count');
+        commentsCount.textContent = parseInt(commentsCount.textContent) + 1;
+    }
+    {% endif %}
+</script>
+{% endblock %}
+
+{% endblock %} 

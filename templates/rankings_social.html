@@ -1,0 +1,87 @@
+{% extends "base_social.html" %}
+
+{% block title %}電影排行榜 - 顧晉瑋的網站{% endblock %}
+
+{% block content %}
+<div class="social-card p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h3 class="mb-0"><i class="fas fa-trophy me-2 text-warning"></i>電影排行榜</h3>
+        <div class="dropdown">
+            <button class="btn btn-outline-primary dropdown-toggle" type="button" id="rankingTypeDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                {{ ranking_type|default('綜合評分') }}
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="rankingTypeDropdown">
+                <li><a class="dropdown-item" href="{{ url_for('rankings', type='rating') }}">評分最高</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('rankings', type='likes') }}">最多人喜歡</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('rankings', type='views') }}">最多人觀看</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('rankings') }}">綜合評分</a></li>
+            </ul>
+        </div>
+    </div>
+    
+    <p class="text-muted">根據觀眾評分、喜歡數量和觀看次數綜合排名的最佳電影</p>
+</div>
+
+{% if movies %}
+{% for movie in movies %}
+<div class="social-card mb-3">
+    <div class="row g-0">
+        <div class="col-md-2 col-3 position-relative">
+            <div class="position-absolute top-0 start-0 p-2">
+                <div class="badge bg-primary rounded-pill fs-5 px-3 py-2">
+                    #{{ loop.index }}
+                </div>
+            </div>
+            {% if movie.poster %}
+            <img src="{{ movie.poster }}" class="img-fluid h-100 object-fit-cover" style="max-height: 150px;" alt="{{ movie.title }}">
+            {% else %}
+            <div class="bg-light d-flex align-items-center justify-content-center h-100" style="min-height: 150px;">
+                <i class="fas fa-film fa-2x text-secondary"></i>
+            </div>
+            {% endif %}
+        </div>
+        <div class="col-md-10 col-9">
+            <div class="p-3 h-100">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="mb-0">{{ movie.title }}</h5>
+                    <a href="{{ url_for('movie_detail', movie_id=movie.id) }}" class="btn btn-sm btn-outline-primary">查看詳情</a>
+                </div>
+                <div class="mb-2">
+                    <span class="badge bg-warning text-dark me-2">
+                        <i class="fas fa-star me-1"></i> {{ movie.rating }}
+                    </span>
+                    <span class="badge bg-danger me-2">
+                        <i class="fas fa-heart me-1"></i> {{ movie.likes_count|default(0) }}
+                    </span>
+                    <span class="badge bg-info text-dark">
+                        <i class="fas fa-eye me-1"></i> {{ movie.views|default(0) }}
+                    </span>
+                </div>
+                
+                {% if movie.description %}
+                <p class="text-muted small mb-2">{{ movie.description|truncate(120) }}</p>
+                {% endif %}
+                
+                <div class="d-flex align-items-center mt-2">
+                    <small class="text-muted me-3">
+                        <i class="fas fa-calendar-alt me-1"></i> {{ movie.date|default('未知日期') }}
+                    </small>
+                    {% if movie.category %}
+                    <small class="text-muted">
+                        <i class="fas fa-tag me-1"></i> {{ movie.category }}
+                    </small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% else %}
+<div class="social-card p-5 text-center">
+    <i class="fas fa-info-circle fa-3x text-muted mb-3"></i>
+    <h4>排行榜數據尚未生成</h4>
+    <p class="text-muted">請稍後再來查看</p>
+</div>
+{% endif %}
+{% endblock %} 

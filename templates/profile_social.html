@@ -1,0 +1,201 @@
+{% extends "base_social.html" %}
+
+{% block title %}個人資料 - 顧晉瑋的網站{% endblock %}
+
+{% block content %}
+<!-- 個人資料頭部 -->
+<div class="social-card mb-4">
+    <div class="position-relative">
+        <!-- 背景圖 -->
+        <div class="bg-primary" style="height: 180px;"></div>
+        
+        <!-- 頭像 -->
+        <div class="position-absolute" style="bottom: -50px; left: 30px;">
+            <div style="width: 120px; height: 120px; border-radius: 50%; border: 4px solid white; overflow: hidden; background-color: #e9e9e9;">
+                {% if user.avatar_url %}
+                <img src="{{ user.avatar_url }}" class="img-fluid" alt="用戶頭像">
+                {% else %}
+                <div class="bg-primary h-100 d-flex align-items-center justify-content-center">
+                    <span class="display-4 text-white">{{ user.display_name[:1] }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- 編輯按鈕 -->
+        <div class="position-absolute" style="bottom: 10px; right: 10px;">
+            <button class="btn btn-light" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                <i class="fas fa-pencil-alt me-1"></i> 編輯個人資料
+            </button>
+        </div>
+    </div>
+    
+    <!-- 用戶資訊 -->
+    <div class="p-3 pt-5 mt-4">
+        <h3 class="mb-1">{{ user.display_name }}</h3>
+        <p class="text-muted">{{ user.email }}</p>
+        
+        <div class="d-flex mt-3">
+            <div class="me-4">
+                <h5 class="mb-0">{{ liked_movies|length }}</h5>
+                <p class="text-muted mb-0">喜歡的電影</p>
+            </div>
+            <div class="me-4">
+                <h5 class="mb-0">0</h5>
+                <p class="text-muted mb-0">評論</p>
+            </div>
+            <div>
+                <h5 class="mb-0">{{ user.created_at|datetime('%Y-%m-%d') }}</h5>
+                <p class="text-muted mb-0">加入日期</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 標籤頁切換 -->
+<ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+        <a class="nav-link active" data-bs-toggle="tab" href="#liked-movies">
+            <i class="fas fa-heart me-1"></i> 喜歡的電影
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#comments">
+            <i class="fas fa-comments me-1"></i> 我的評論
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#activity">
+            <i class="fas fa-history me-1"></i> 活動紀錄
+        </a>
+    </li>
+</ul>
+
+<div class="tab-content">
+    <!-- 喜歡的電影 -->
+    <div class="tab-pane fade show active" id="liked-movies">
+        {% if liked_movies %}
+        <div class="row g-3">
+            {% for movie in liked_movies %}
+            <div class="col-md-6 col-lg-4">
+                <div class="social-card h-100">
+                    {% if movie.poster %}
+                    <img src="{{ movie.poster }}" class="card-img-top" alt="{{ movie.title }}">
+                    {% else %}
+                    <div class="bg-light p-4 text-center">
+                        <i class="fas fa-film fa-2x text-secondary"></i>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="p-3">
+                        <h6 class="mb-1">{{ movie.title }}</h6>
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <small class="text-muted">評分: {{ movie.rating }}</small>
+                            <form action="{{ url_for('like_movie', movie_id=movie.id) }}" method="POST" class="d-inline">
+                                <button type="submit" class="btn btn-sm btn-danger">
+                                    <i class="fas fa-heart-broken"></i>
+                                </button>
+                            </form>
+                        </div>
+                        <a href="{{ url_for('movie_detail', movie_id=movie.id) }}" class="btn btn-sm btn-outline-primary w-100">查看詳情</a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-heart-broken fa-3x text-muted mb-3"></i>
+            <h5>還沒有喜歡的電影</h5>
+            <p class="text-muted">瀏覽電影並點擊「喜歡」按鈕將它們添加到這裡</p>
+            <a href="{{ url_for('movies') }}" class="btn btn-primary mt-2">瀏覽電影</a>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- 評論 -->
+    <div class="tab-pane fade" id="comments">
+        <div class="text-center py-5">
+            <i class="fas fa-comment-slash fa-3x text-muted mb-3"></i>
+            <h5>尚無評論</h5>
+            <p class="text-muted">您發表的評論將顯示在這裡</p>
+        </div>
+    </div>
+    
+    <!-- 活動記錄 -->
+    <div class="tab-pane fade" id="activity">
+        <div class="text-center py-5">
+            <i class="fas fa-history fa-3x text-muted mb-3"></i>
+            <h5>尚無活動記錄</h5>
+            <p class="text-muted">您在本站的活動將顯示在這裡</p>
+        </div>
+    </div>
+</div>
+
+<!-- 編輯個人資料模態框 -->
+<div class="modal fade" id="editProfileModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">編輯個人資料</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form action="/profile/update" method="POST" enctype="multipart/form-data">
+                    <div class="mb-3 text-center">
+                        <div style="width: 100px; height: 100px; margin: 0 auto; border-radius: 50%; overflow: hidden; background-color: #e9e9e9;">
+                            {% if user.avatar_url %}
+                            <img src="{{ user.avatar_url }}" class="img-fluid" alt="用戶頭像" id="avatar-preview">
+                            {% else %}
+                            <div class="bg-primary h-100 d-flex align-items-center justify-content-center" id="avatar-placeholder">
+                                <span class="display-6 text-white">{{ user.display_name[:1] }}</span>
+                            </div>
+                            <img src="" class="img-fluid d-none" alt="用戶頭像" id="avatar-preview">
+                            {% endif %}
+                        </div>
+                        <div class="mt-2">
+                            <label for="avatar" class="btn btn-sm btn-outline-primary">
+                                <i class="fas fa-camera me-1"></i> 更換頭像
+                            </label>
+                            <input type="file" id="avatar" name="avatar" accept="image/*" class="d-none" onchange="previewAvatar(this)">
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="display_name" class="form-label">顯示名稱</label>
+                        <input type="text" class="form-control" id="display_name" name="display_name" value="{{ user.display_name }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="bio" class="form-label">個人簡介</label>
+                        <textarea class="form-control" id="bio" name="bio" rows="3">{{ user.bio }}</textarea>
+                    </div>
+                    
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i> 儲存變更
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function previewAvatar(input) {
+        if (input.files && input.files[0]) {
+            var reader = new FileReader();
+            
+            reader.onload = function(e) {
+                document.getElementById('avatar-placeholder').classList.add('d-none');
+                var preview = document.getElementById('avatar-preview');
+                preview.src = e.target.result;
+                preview.classList.remove('d-none');
+            }
+            
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+</script>
+{% endblock %} 

@@ -6,6 +6,7 @@ import base64
 import logging
 import time
 from functools import lru_cache
+from datetime import datetime, timezone
 
 # 配置日誌
 logging.basicConfig(level=logging.INFO)
@@ -344,5 +345,105 @@ def get_movie_comments(movie_id):
         result.append(comment_data)
     
     return result
+
+def create_post(user_id, text, movie_id=None, image_url=None):
+    """創建新貼文"""
+    try:
+        db = initialize_firebase()
+        user = get_document('users', user_id)
+        if not user:
+            return None
+        
+        post_ref = db.collection('posts').document()
+        post_data = {
+            'user_id': user_id,
+            'user_name': user.get('display_name'),
+            'user_avatar': user.get('avatar_url', ''),
+            'text': text,
+            'created_at': firestore.SERVER_TIMESTAMP,
+            'likes_count': 0
+        }
+        
+        if movie_id:
+            post_data['movie_id'] = movie_id
+            movie = get_document('movies', movie_id)
+            if movie:
+                post_data['movie_title'] = movie.get('title')
+                post_data['movie_poster'] = movie.get('poster', '')
+        
+        if image_url:
+            post_data['image_url'] = image_url
+        
+        post_ref.set(post_data)
+        
+        # 將ID添加到返回的資料中
+        post_data['id'] = post_ref.id
+        
+        return post_data
+    except Exception as e:
+        print(f"創建貼文錯誤: {e}")
+        return None
+
+def get_posts(limit=20, user_id=None):
+    """獲取所有貼文或指定用戶的貼文"""
+    try:
+        db = initialize_firebase()
+        query = db.collection('posts')
+        
+        if user_id:
+            query = query.where('user_id', '==', user_id)
+        
+        # 按創建時間降序排序
+        query = query.order_by('created_at', direction=firestore.Query.DESCENDING).limit(limit)
+        
+        posts = []
+        for doc in query.get():
+            post_data = doc.to_dict()
+            post_data['id'] = doc.id
+            
+            # 將 Timestamp 轉換為可讀格式
+            if 'created_at' in post_data and post_data['created_at']:
+                timestamp = post_data['created_at']
+                post_data['created_at_formatted'] = timestamp.strftime("%Y-%m-%d %H:%M")
+                
+                # 計算「多久前」
+                now = datetime.now(timezone.utc)
+                seconds_ago = (now - timestamp).total_seconds()
+                
+                if seconds_ago < 60:
+                    post_data['time_ago'] = f"{int(seconds_ago)}秒前"
+                elif seconds_ago < 3600:
+                    post_data['time_ago'] = f"{int(seconds_ago/60)}分鐘前"
+                elif seconds_ago < 86400:
+                    post_data['time_ago'] = f"{int(seconds_ago/3600)}小時前"
+                else:
+                    post_data['time_ago'] = f"{int(seconds_ago/86400)}天前"
+            
+            posts.append(post_data)
+        
+        return posts
+    except Exception as e:
+        print(f"獲取貼文錯誤: {e}")
+        return []
+
+def upload_to_firebase_storage(file_obj, destination_path):
+    """通用的 Firebase Storage 上傳函數"""
+    try:
+        bucket = storage.bucket()
+        blob = bucket.blob(destination_path)
+        
+        # 設置內容類型
+        content_type = file_obj.content_type
+        blob.content_type = content_type
+        
+        # 上傳文件
+        blob.upload_from_file(file_obj)
+        
+        # 生成可訪問的URL
+        blob.make_public()
+        return blob.public_url
+    except Exception as e:
+        print(f"Firebase Storage 上傳錯誤: {e}")
+        return None
 
 # ... 其他操作函數 ... 

@@ -1,0 +1,159 @@
+{% extends "base_social.html" %}
+
+{% block title %}{{ movie.title }} - 顧晉瑋的網站{% endblock %}
+
+{% block content %}
+<div class="social-card mb-4">
+    <!-- 頂部資訊 -->
+    <div class="p-3 d-flex align-items-center">
+        <div class="avatar-container">
+            <div class="bg-primary h-100 d-flex align-items-center justify-content-center">
+                <i class="fas fa-film text-white"></i>
+            </div>
+        </div>
+        <div class="flex-grow-1">
+            <h5 class="mb-0">{{ movie.title }}</h5>
+            <small class="text-muted">{{ movie.date }}</small>
+        </div>
+        <div class="dropdown">
+            <button class="btn btn-link text-dark" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="fas fa-ellipsis-h"></i>
+            </button>
+            <ul class="dropdown-menu dropdown-menu-end">
+                {% if movie.link %}
+                <li><a class="dropdown-item" href="{{ movie.link }}" target="_blank"><i class="fas fa-external-link-alt me-2"></i> 查看原始資料</a></li>
+                {% endif %}
+                <li><a class="dropdown-item" href="/report/movie/{{ movie.id }}"><i class="fas fa-flag me-2"></i> 回報問題</a></li>
+            </ul>
+        </div>
+    </div>
+    
+    <!-- 電影圖片 -->
+    {% if movie.poster %}
+    <img src="{{ movie.poster }}" class="img-fluid w-100" alt="{{ movie.title }}">
+    {% else %}
+    <div class="bg-light p-5 text-center">
+        <i class="fas fa-film fa-3x text-secondary"></i>
+    </div>
+    {% endif %}
+    
+    <!-- 評分和喜歡 -->
+    <div class="p-3">
+        <div class="d-flex justify-content-between mb-3">
+            <div>
+                <i class="fas fa-star text-warning"></i> <span class="fw-bold">{{ movie.rating }}</span>
+            </div>
+            <div>
+                <i class="fas fa-heart text-danger"></i> <span>{{ likes_count }}</span>
+            </div>
+        </div>
+        
+        {% if movie.description %}
+        <h5>劇情簡介</h5>
+        <p>{{ movie.description }}</p>
+        {% endif %}
+        
+        <div class="row mt-3">
+            {% if movie.director %}
+            <div class="col-md-6 mb-2">
+                <strong><i class="fas fa-video me-1"></i> 導演:</strong> {{ movie.director }}
+            </div>
+            {% endif %}
+            
+            {% if movie.actors %}
+            <div class="col-md-6 mb-2">
+                <strong><i class="fas fa-users me-1"></i> 演員:</strong> {{ movie.actors }}
+            </div>
+            {% endif %}
+            
+            {% if movie.category %}
+            <div class="col-md-6 mb-2">
+                <strong><i class="fas fa-tag me-1"></i> 類型:</strong> {{ movie.category }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- 互動欄 -->
+    <div class="interaction-bar border-bottom">
+        <form action="{{ url_for('like_movie', movie_id=movie.id) }}" method="POST" class="d-inline">
+            <button type="submit" class="interaction-btn bg-transparent border-0">
+                <i class="fas fa-heart me-2 {{ 'text-danger' if user_liked else '' }}"></i>
+                <span>{{ '取消喜歡' if user_liked else '喜歡' }}</span>
+            </button>
+        </form>
+        <div class="interaction-btn" onclick="document.getElementById('comment-input').focus()">
+            <i class="fas fa-comment me-2"></i>
+            <span>評論</span>
+        </div>
+        <div class="interaction-btn">
+            <i class="fas fa-share me-2"></i>
+            <span>分享</span>
+        </div>
+    </div>
+    
+    <!-- 評論區 -->
+    <div class="p-3">
+        <h5><i class="fas fa-comments me-2"></i>觀眾評論 <span class="badge bg-primary rounded-pill" id="comments-count">{{ comments|length }}</span></h5>
+        
+        {% if session.get('user_id') %}
+        <form action="{{ url_for('add_comment', movie_id=movie.id) }}" method="POST" class="mb-4 mt-3">
+            <div class="d-flex">
+                <div class="avatar-container">
+                    {% if user.avatar_url %}
+                    <img src="{{ user.avatar_url }}" class="img-fluid" alt="用戶頭像">
+                    {% else %}
+                    <div class="bg-primary h-100 d-flex align-items-center justify-content-center">
+                        <span class="text-white">{{ session.get('user_name', 'U')[0] }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="flex-grow-1">
+                    <div class="input-group">
+                        <textarea class="form-control" id="comment-input" name="comment" placeholder="發表評論..." rows="1" required></textarea>
+                        <button class="btn btn-primary" type="submit"><i class="fas fa-paper-plane"></i></button>
+                    </div>
+                </div>
+            </div>
+        </form>
+        {% else %}
+        <div class="alert alert-info d-flex align-items-center">
+            <i class="fas fa-info-circle me-2"></i>
+            <div>請<a href="{{ url_for('auth.login') }}" class="alert-link">登入</a>後發表評論</div>
+        </div>
+        {% endif %}
+        
+        <div id="comments-container">
+            {% if comments %}
+                {% for comment in comments %}
+                <div class="d-flex mb-3">
+                    <div class="avatar-container">
+                        <div class="bg-secondary h-100 d-flex align-items-center justify-content-center">
+                            <span class="text-white">{{ comment.userName[:1] }}</span>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-2">
+                        <div class="bg-light p-3 rounded">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <h6 class="mb-0">{{ comment.userName }}</h6>
+                                <small class="text-muted">{{ comment.created_at|datetime }}</small>
+                            </div>
+                            <p class="mb-0">{{ comment.text }}</p>
+                        </div>
+                        <div class="d-flex mt-1">
+                            <small class="text-muted me-3 cursor-pointer">讚</small>
+                            <small class="text-muted cursor-pointer">回覆</small>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="text-center py-4" id="no-comments">
+                    <i class="fas fa-comment-slash fa-2x text-muted mb-3"></i>
+                    <p class="mb-0">成為第一個評論的人</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

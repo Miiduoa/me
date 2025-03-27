@@ -1,0 +1,129 @@
+{% extends "base_social.html" %}
+
+{% block title %}首頁 - 顧晉瑋的網站{% endblock %}
+
+{% block content %}
+<!-- 發佈框 -->
+{% if session.get('user_id') %}
+<div class="social-card p-3 mb-4">
+    <div class="d-flex align-items-center mb-3">
+        <div class="avatar-container">
+            {% if user.avatar_url %}
+            <img src="{{ user.avatar_url }}" class="img-fluid" alt="用戶頭像">
+            {% else %}
+            <div class="bg-primary h-100 d-flex align-items-center justify-content-center">
+                <span class="text-white">{{ session.get('user_name', 'U')[0] }}</span>
+            </div>
+            {% endif %}
+        </div>
+        <div class="flex-grow-1">
+            <textarea class="form-control border-0 bg-light" placeholder="分享你的電影心得..."></textarea>
+        </div>
+    </div>
+    <div class="d-flex justify-content-end">
+        <button class="btn btn-primary rounded-pill px-4" disabled>發佈</button>
+    </div>
+</div>
+{% endif %}
+
+<!-- 精選電影 -->
+<div class="mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0">精選電影</h4>
+        <a href="/movies" class="text-decoration-none">查看更多</a>
+    </div>
+    
+    {% for movie in movies %}
+    <div class="social-card">
+        <!-- 頂部資訊 -->
+        <div class="p-3 d-flex align-items-center">
+            <div class="avatar-container">
+                <div class="bg-primary h-100 d-flex align-items-center justify-content-center">
+                    <i class="fas fa-film text-white"></i>
+                </div>
+            </div>
+            <div>
+                <h5 class="mb-0">{{ movie.title }}</h5>
+                <small class="text-muted">{{ movie.date }}</small>
+            </div>
+        </div>
+        
+        <!-- 電影圖片 -->
+        {% if movie.poster %}
+        <img src="{{ movie.poster }}" class="img-fluid w-100" alt="{{ movie.title }}">
+        {% else %}
+        <div class="bg-light p-5 text-center">
+            <i class="fas fa-film fa-3x text-secondary"></i>
+        </div>
+        {% endif %}
+        
+        <!-- 評分和喜歡 -->
+        <div class="p-3">
+            <div class="d-flex justify-content-between mb-2">
+                <div>
+                    <i class="fas fa-star text-warning"></i> <span class="fw-bold">{{ movie.rating }}</span>
+                </div>
+                <div>
+                    <i class="fas fa-heart text-danger"></i> <span>{{ movie.likes_count|default(0) }}</span>
+                </div>
+            </div>
+            
+            {% if movie.description %}
+            <p class="text-muted">{{ movie.description|truncate(100) }}</p>
+            {% endif %}
+        </div>
+        
+        <!-- 互動欄 -->
+        <div class="interaction-bar">
+            <div class="interaction-btn">
+                <i class="fas fa-heart me-2 {{ 'text-danger' if movie.user_liked else '' }}"></i>
+                <span>喜歡</span>
+            </div>
+            <div class="interaction-btn">
+                <i class="fas fa-comment me-2"></i>
+                <span>評論</span>
+            </div>
+            <div class="interaction-btn ms-auto">
+                <a href="{{ url_for('movie_detail', movie_id=movie.id) }}" class="text-decoration-none text-dark">
+                    <i class="fas fa-ellipsis-h"></i>
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- 推薦電影 -->
+{% if recommended_movies %}
+<div class="mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0">為您推薦</h4>
+    </div>
+    
+    <div class="row g-3">
+        {% for movie in recommended_movies %}
+        <div class="col-md-4">
+            <div class="social-card h-100">
+                {% if movie.poster %}
+                <img src="{{ movie.poster }}" class="card-img-top" alt="{{ movie.title }}">
+                {% else %}
+                <div class="bg-light p-4 text-center">
+                    <i class="fas fa-film fa-2x text-secondary"></i>
+                </div>
+                {% endif %}
+                
+                <div class="p-3">
+                    <h6 class="mb-1">{{ movie.title }}</h6>
+                    <div class="d-flex justify-content-between mb-2">
+                        <small class="text-muted">評分: {{ movie.rating }}</small>
+                        <small><i class="fas fa-heart text-danger"></i> {{ movie.likes_count|default(0) }}</small>
+                    </div>
+                    <a href="{{ url_for('movie_detail', movie_id=movie.id) }}" class="btn btn-sm btn-outline-primary w-100">查看詳情</a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %} 

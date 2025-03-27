@@ -1,0 +1,159 @@
+{% extends "base_threads.html" %}
+
+{% block title %}首頁 - 顧晉瑋的網站{% endblock %}
+
+{% block content %}
+<!-- 頂部標題欄 -->
+<div class="threads-card">
+    <h5 class="m-0">首頁</h5>
+</div>
+
+<!-- 發佈框 -->
+{% if session.get('user_id') %}
+<div class="threads-card">
+    <div class="thread-header">
+        <div class="avatar">
+            {% if user.avatar_url %}
+            <img src="{{ user.avatar_url }}" class="img-fluid" alt="用戶頭像">
+            {% else %}
+            <span class="text-white">{{ session.get('user_name', 'U')[0] }}</span>
+            {% endif %}
+        </div>
+        <div>
+            <p class="mb-0 fw-bold">{{ session.get('user_name') }}</p>
+        </div>
+    </div>
+    <textarea id="post-text" class="form-control bg-transparent text-white border-0" placeholder="分享你的電影心得..."></textarea>
+    <div class="d-flex justify-content-between align-items-center mt-3">
+        <div>
+            <input type="file" id="post-image" class="d-none" accept="image/*">
+            <button id="image-upload-btn" class="btn btn-sm btn-outline-light rounded-circle"><i class="fas fa-image"></i></button>
+            <button class="btn btn-sm btn-outline-light rounded-circle ms-2"><i class="fas fa-link"></i></button>
+        </div>
+        <button id="post-btn" class="btn btn-sm btn-primary px-3 rounded-pill">發佈</button>
+    </div>
+    <div id="image-preview" class="mt-2 rounded overflow-hidden" style="display: none;">
+        <img id="preview-img" class="img-fluid w-100" style="max-height: 200px; object-fit: cover;">
+        <button id="remove-image" class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2 rounded-circle">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
+</div>
+{% endif %}
+
+<!-- 用戶貼文 -->
+{% if posts %}
+<div class="threads-card">
+    <h6 class="mb-0">近期動態</h6>
+</div>
+
+{% for post in posts %}
+<div class="thread-item">
+    <div class="thread-header">
+        <div class="avatar">
+            {% if post.user_avatar %}
+            <img src="{{ post.user_avatar }}" class="img-fluid" alt="{{ post.user_name }}">
+            {% else %}
+            <span class="text-white">{{ post.user_name[0] }}</span>
+            {% endif %}
+        </div>
+        <div>
+            <p class="mb-0 fw-bold">{{ post.user_name }}</p>
+            <small class="text-muted">{{ post.time_ago }}</small>
+        </div>
+    </div>
+    
+    {% if post.text %}
+    <p>{{ post.text }}</p>
+    {% endif %}
+    
+    {% if post.image_url %}
+    <div class="rounded overflow-hidden mb-3">
+        <img src="{{ post.image_url }}" class="img-fluid w-100" style="max-height: 350px; object-fit: cover;" alt="用戶分享圖片">
+    </div>
+    {% endif %}
+    
+    {% if post.movie_id %}
+    <div class="bg-dark p-3 rounded mb-3 border border-secondary">
+        <div class="d-flex">
+            {% if post.movie_poster %}
+            <img src="{{ post.movie_poster }}" class="img-fluid rounded" style="width: 60px; height: 90px; object-fit: cover;" alt="{{ post.movie_title }}">
+            {% endif %}
+            <div class="ms-3">
+                <p class="mb-1 fw-bold">{{ post.movie_title }}</p>
+                <a href="{{ url_for('threads_movie_detail', movie_id=post.movie_id) }}" class="btn btn-sm btn-outline-light">查看電影</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    
+    <div class="interaction-bar">
+        <div class="interaction-btn">
+            <i class="far fa-heart me-2"></i>
+            <span>{{ post.likes_count|default(0) }}</span>
+        </div>
+        <div class="interaction-btn">
+            <i class="far fa-comment me-2"></i>
+        </div>
+        <div class="interaction-btn">
+            <i class="fas fa-share-alt"></i>
+        </div>
+    </div>
+</div>
+{% endfor %}
+{% endif %}
+
+<!-- 電影貼文流 -->
+<div class="threads-card mt-4">
+    <h6 class="mb-0">推薦電影</h6>
+</div>
+
+{% for movie in movies %}
+<div class="thread-item">
+    <div class="thread-header">
+        <div class="avatar">
+            <i class="fas fa-film text-white"></i>
+        </div>
+        <div>
+            <p class="mb-0 fw-bold">{{ movie.title }}</p>
+            <small class="text-muted">{{ movie.date }}</small>
+        </div>
+    </div>
+    
+    {% if movie.description %}
+    <p>{{ movie.description|truncate(150) }}</p>
+    {% endif %}
+    
+    {% if movie.poster %}
+    <div class="rounded overflow-hidden mb-3">
+        <img src="{{ movie.poster }}" class="img-fluid w-100" style="max-height: 350px; object-fit: cover;" alt="{{ movie.title }}">
+    </div>
+    {% endif %}
+    
+    <div class="d-flex align-items-center mt-2">
+        <span class="badge bg-dark text-light border border-secondary me-2">
+            <i class="fas fa-star text-warning me-1"></i> {{ movie.rating }}
+        </span>
+        {% if movie.category %}
+        <span class="badge bg-dark text-light border border-secondary">{{ movie.category }}</span>
+        {% endif %}
+    </div>
+    
+    <div class="interaction-bar">
+        <div class="interaction-btn">
+            <i class="far fa-heart me-2 {{ 'fas text-danger' if movie.user_liked else '' }}"></i>
+            <span>{{ movie.likes_count|default(0) }}</span>
+        </div>
+        <div class="interaction-btn">
+            <i class="far fa-comment me-2"></i>
+        </div>
+        <div class="interaction-btn">
+            <a href="{{ url_for('threads_movie_detail', movie_id=movie.id) }}" class="text-decoration-none text-white">
+                <i class="fas fa-ellipsis-h"></i>
+            </a>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% endblock %} 

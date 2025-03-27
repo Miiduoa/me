@@ -1,0 +1,65 @@
+/* 這個檔案用於自定義 Threads 風格 */
+.thread-footer {
+    border-top: 1px solid var(--threads-border);
+    padding-top: 12px;
+    margin-top: 12px;
+}
+
+.thread-reply {
+    margin-left: 52px;
+    padding-top: 12px;
+}
+
+.thread-reply .avatar {
+    width: 32px;
+    height: 32px;
+}
+
+.thread-compose {
+    position: sticky;
+    bottom: 0;
+    background-color: var(--threads-bg);
+    padding: 16px;
+    border-top: 1px solid var(--threads-border);
+}
+
+.thread-composer-input {
+    background-color: transparent;
+    border: none;
+    color: var(--threads-text);
+    width: 100%;
+    resize: none;
+    padding: 8px 0;
+}
+
+.thread-composer-input:focus {
+    outline: none;
+}
+
+.btn-threads {
+    background-color: var(--threads-accent);
+    border: none;
+    color: white;
+    border-radius: 20px;
+    padding: 6px 16px;
+}
+
+.btn-threads:hover {
+    opacity: 0.85;
+}
+
+/* 卡片特效 */
+.threads-hover:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+/* 動畫效果 */
+.like-animation {
+    animation: like-pulse 0.4s ease;
+}
+
+@keyframes like-pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.2); }
+    100% { transform: scale(1); }
+} 

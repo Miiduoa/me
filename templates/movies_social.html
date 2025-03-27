@@ -1,0 +1,115 @@
+{% extends "base_social.html" %}
+
+{% block title %}電影列表 - 顧晉瑋的網站{% endblock %}
+
+{% block content %}
+<!-- 搜尋和篩選 -->
+<div class="social-card p-3 mb-4">
+    <form action="{{ url_for('movies') }}" method="GET">
+        <div class="row g-2">
+            <div class="col-md-5">
+                <div class="input-group">
+                    <span class="input-group-text bg-transparent border-end-0">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" name="search" class="form-control border-start-0" placeholder="搜尋電影..." value="{{ request.args.get('search', '') }}">
+                </div>
+            </div>
+            <div class="col-md-3">
+                <select name="category" class="form-select">
+                    <option value="">所有類型</option>
+                    <option value="動作" {{ 'selected' if request.args.get('category') == '動作' }}>動作</option>
+                    <option value="冒險" {{ 'selected' if request.args.get('category') == '冒險' }}>冒險</option>
+                    <option value="科幻" {{ 'selected' if request.args.get('category') == '科幻' }}>科幻</option>
+                    <option value="劇情" {{ 'selected' if request.args.get('category') == '劇情' }}>劇情</option>
+                    <option value="動畫" {{ 'selected' if request.args.get('category') == '動畫' }}>動畫</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="sort" class="form-select">
+                    <option value="rating" {{ 'selected' if request.args.get('sort') == 'rating' or not request.args.get('sort') }}>評分高至低</option>
+                    <option value="date" {{ 'selected' if request.args.get('sort') == 'date' }}>最新上映</option>
+                    <option value="likes" {{ 'selected' if request.args.get('sort') == 'likes' }}>最多人喜歡</option>
+                </select>
+            </div>
+            <div class="col-md-1">
+                <button type="submit" class="btn btn-primary w-100">篩選</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<!-- 電影列表 -->
+<div class="row g-3">
+    {% for movie in movies %}
+    <div class="col-md-6">
+        <div class="social-card h-100">
+            <div class="row g-0">
+                <div class="col-4">
+                    {% if movie.poster %}
+                    <img src="{{ movie.poster }}" class="img-fluid h-100 w-100 object-fit-cover" style="object-fit: cover;" alt="{{ movie.title }}">
+                    {% else %}
+                    <div class="bg-light h-100 d-flex align-items-center justify-content-center p-2">
+                        <i class="fas fa-film fa-2x text-secondary"></i>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="col-8">
+                    <div class="p-3 h-100 d-flex flex-column">
+                        <div>
+                            <h5 class="mb-1">{{ movie.title }}</h5>
+                            <div class="d-flex mb-2">
+                                <span class="badge bg-primary me-1">{{ movie.rating }} <i class="fas fa-star ms-1"></i></span>
+                                {% if movie.category %}
+                                <span class="badge bg-secondary">{{ movie.category }}</span>
+                                {% endif %}
+                            </div>
+                            <p class="small text-muted mb-2">{{ movie.date }}</p>
+                            
+                            {% if movie.description %}
+                            <p class="small mb-2">{{ movie.description|truncate(80) }}</p>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="mt-auto">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <i class="fas fa-heart {{ 'text-danger' if movie.user_liked else 'text-muted' }}"></i>
+                                    <small class="ms-1">{{ movie.likes_count|default(0) }}</small>
+                                </div>
+                                <a href="{{ url_for('movie_detail', movie_id=movie.id) }}" class="btn btn-sm btn-primary">查看詳情</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- 分頁 -->
+{% if pagination.pages > 1 %}
+<nav aria-label="電影列表分頁" class="mt-4">
+    <ul class="pagination justify-content-center">
+        <li class="page-item {{ 'disabled' if pagination.page == 1 }}">
+            <a class="page-link" href="{{ url_for('movies', page=pagination.page-1, search=request.args.get('search', ''), category=request.args.get('category', ''), sort=request.args.get('sort', '')) }}" aria-label="上一頁">
+                <span aria-hidden="true">&laquo;</span>
+            </a>
+        </li>
+        
+        {% for p in range(max(1, pagination.page-2), min(pagination.pages+1, pagination.page+3)) %}
+        <li class="page-item {{ 'active' if p == pagination.page }}">
+            <a class="page-link" href="{{ url_for('movies', page=p, search=request.args.get('search', ''), category=request.args.get('category', ''), sort=request.args.get('sort', '')) }}">{{ p }}</a>
+        </li>
+        {% endfor %}
+        
+        <li class="page-item {{ 'disabled' if pagination.page == pagination.pages }}">
+            <a class="page-link" href="{{ url_for('movies', page=pagination.page+1, search=request.args.get('search', ''), category=request.args.get('category', ''), sort=request.args.get('sort', '')) }}" aria-label="下一頁">
+                <span aria-hidden="true">&raquo;</span>
+            </a>
+        </li>
+    </ul>
+</nav>
+{% endif %}
+{% endblock %} 

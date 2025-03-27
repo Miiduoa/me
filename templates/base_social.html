@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <!-- 保留原有的 head 內容 -->
+    <style>
+        :root {
+            --primary-color: #1877f2;
+            --secondary-color: #f0f2f5;
+            --border-color: #dddfe2;
+            --text-primary: #1c1e21;
+            --text-secondary: #65676b;
+        }
+        
+        body {
+            background-color: var(--secondary-color);
+            font-family: 'Noto Sans TC', sans-serif;
+        }
+        
+        .social-layout {
+            display: flex;
+            min-height: calc(100vh - 56px);
+        }
+        
+        .sidebar {
+            width: 280px;
+            position: sticky;
+            top: 56px;
+            height: calc(100vh - 56px);
+            overflow-y: auto;
+            padding: 20px;
+            border-right: 1px solid var(--border-color);
+            background-color: white;
+        }
+        
+        .main-content {
+            flex: 1;
+            max-width: 680px;
+            margin: 0 auto;
+            padding: 20px 15px;
+        }
+        
+        .right-sidebar {
+            width: 340px;
+            position: sticky;
+            top: 56px;
+            height: calc(100vh - 56px);
+            overflow-y: auto;
+            padding: 20px;
+            border-left: 1px solid var(--border-color);
+            background-color: white;
+        }
+        
+        .social-card {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+            margin-bottom: 16px;
+            overflow: hidden;
+        }
+        
+        .social-nav .nav-item .nav-link {
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin-bottom: 5px;
+            transition: all 0.2s;
+        }
+        
+        .social-nav .nav-item .nav-link:hover,
+        .social-nav .nav-item .nav-link.active {
+            background-color: var(--secondary-color);
+        }
+        
+        .interaction-bar {
+            display: flex;
+            padding: 8px 12px;
+            border-top: 1px solid var(--border-color);
+        }
+        
+        .interaction-btn {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-radius: 5px;
+            margin-right: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        
+        .interaction-btn:hover {
+            background-color: var(--secondary-color);
+        }
+        
+        .avatar-container {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            margin-right: 10px;
+        }
+        
+        @media (max-width: 992px) {
+            .sidebar, .right-sidebar {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 保留現有導航欄 -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary sticky-top shadow-sm">
+        <!-- 導航欄內容 -->
+    </nav>
+    
+    <div class="social-layout">
+        <!-- 左側邊欄 -->
+        <div class="sidebar d-none d-lg-block">
+            <ul class="nav flex-column social-nav">
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if request.path == '/' }}" href="/">
+                        <i class="fas fa-home fa-fw me-3"></i> 首頁
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if request.path == '/movies' }}" href="/movies">
+                        <i class="fas fa-film fa-fw me-3"></i> 電影
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if request.path == '/rankings' }}" href="/rankings">
+                        <i class="fas fa-trophy fa-fw me-3"></i> 排行榜
+                    </a>
+                </li>
+                {% if session.get('user_id') %}
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if request.path == '/profile' }}" href="/profile">
+                        <i class="fas fa-user fa-fw me-3"></i> 個人資料
+                    </a>
+                </li>
+                {% endif %}
+                <li class="nav-item">
+                    <a class="nav-link {{ 'active' if request.path == '/about' }}" href="/about">
+                        <i class="fas fa-info-circle fa-fw me-3"></i> 關於我們
+                    </a>
+                </li>
+            </ul>
+            
+            <hr>
+            
+            <h6 class="sidebar-heading text-muted px-3 mt-4 mb-2">熱門標籤</h6>
+            <div class="px-3">
+                <a href="/tag/動作" class="badge bg-light text-dark text-decoration-none mb-1 p-2">#動作</a>
+                <a href="/tag/冒險" class="badge bg-light text-dark text-decoration-none mb-1 p-2">#冒險</a>
+                <a href="/tag/科幻" class="badge bg-light text-dark text-decoration-none mb-1 p-2">#科幻</a>
+                <a href="/tag/劇情" class="badge bg-light text-dark text-decoration-none mb-1 p-2">#劇情</a>
+                <a href="/tag/動畫" class="badge bg-light text-dark text-decoration-none mb-1 p-2">#動畫</a>
+            </div>
+        </div>
+        
+        <!-- 主要內容區域 -->
+        <main class="main-content">
+            {% block content %}{% endblock %}
+        </main>
+        
+        <!-- 右側邊欄 -->
+        <div class="right-sidebar d-none d-lg-block">
+            <div class="social-card p-3 mb-4">
+                <h5 class="mb-3">推薦電影</h5>
+                {% for movie in recommended_movies %}
+                <div class="d-flex mb-2">
+                    <div class="avatar-container">
+                        {% if movie.poster %}
+                        <img src="{{ movie.poster }}" class="img-fluid" alt="{{ movie.title }}">
+                        {% else %}
+                        <div class="bg-light h-100 d-flex align-items-center justify-content-center">
+                            <i class="fas fa-film"></i>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <a href="{{ url_for('movie_detail', movie_id=movie.id) }}" class="text-decoration-none">
+                            <p class="mb-0 fw-bold">{{ movie.title }}</p>
+                        </a>
+                        <small class="text-muted">評分: {{ movie.rating }}</small>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            
+            <div class="social-card p-3">
+                <h5 class="mb-3">熱門用戶</h5>
+                <!-- 這裡可以放置熱門用戶列表 -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- 保留現有的頁腳 -->
+    <footer class="bg-dark text-white py-4 mt-3">
+        <!-- 頁腳內容 -->
+    </footer>
+    
+    <!-- 保留所有 JS 引用 -->
+</body>
+</html> 
