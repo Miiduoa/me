@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}系統診斷 - 顧晉瑋的網站{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h3>系統全面診斷</h3>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-info">
+                此頁面顯示系統所有關鍵組件的狀態，幫助確定錯誤來源。
+            </div>
+            
+            <!-- Firebase 狀態 -->
+            <h4 class="mt-4">Firebase 連接</h4>
+            <div class="alert {% if results.firebase.status == 'ok' %}alert-success{% else %}alert-danger{% endif %}">
+                狀態: {{ results.firebase.status }}
+                {% if results.firebase.status != 'ok' %}
+                <div class="mt-2"><strong>錯誤詳情:</strong> {{ results.firebase.details }}</div>
+                {% endif %}
+            </div>
+            
+            <!-- 路由檢查 -->
+            <h4 class="mt-4">關鍵路由</h4>
+            <div class="alert {% if results.routes.status == 'ok' %}alert-success{% else %}alert-danger{% endif %}">
+                整體狀態: {{ results.routes.status }}
+            </div>
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>路由名稱</th>
+                        <th>URL</th>
+                        <th>狀態</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for route in results.routes.details %}
+                    <tr>
+                        <td>{{ route.route }}</td>
+                        <td>{% if route.url %}{{ route.url }}{% else %}N/A{% endif %}</td>
+                        <td>
+                            {% if route.status == 'ok' %}
+                            <span class="badge bg-success">正常</span>
+                            {% else %}
+                            <span class="badge bg-danger">錯誤</span>
+                            {{ route.error }}
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+            <!-- 模板檢查 -->
+            <h4 class="mt-4">關鍵模板</h4>
+            <div class="alert {% if results.templates.status == 'ok' %}alert-success{% else %}alert-danger{% endif %}">
+                整體狀態: {{ results.templates.status }}
+            </div>
+            <ul class="list-group">
+                {% for template in results.templates.details %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    {{ template.template }}
+                    {% if template.status == 'ok' %}
+                    <span class="badge bg-success">存在</span>
+                    {% else %}
+                    <span class="badge bg-danger">缺失</span>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            
+            <!-- 靜態文件檢查 -->
+            <h4 class="mt-4">靜態文件</h4>
+            <div class="alert {% if results.static.status == 'ok' %}alert-success{% else %}alert-danger{% endif %}">
+                整體狀態: {{ results.static.status }}
+            </div>
+            <ul class="list-group">
+                {% for file in results.static.details %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    {{ file.file }}
+                    {% if file.status == 'ok' %}
+                    <span class="badge bg-success">存在</span>
+                    {% else %}
+                    <span class="badge bg-danger">缺失</span>
+                    {% endif %}
+                </li>
+                {% endfor %}
+            </ul>
+            
+            <!-- Session 資訊 -->
+            <h4 class="mt-4">Session 資訊</h4>
+            <div class="alert {% if results.session.status == 'ok' %}alert-success{% else %}alert-warning{% endif %}">
+                狀態: {{ results.session.status }}
+            </div>
+            <pre class="bg-light p-3 rounded">{{ results.session.details|pprint }}</pre>
+            
+            <!-- 修復步驟 -->
+            <h4 class="mt-4">建議修復步驟</h4>
+            <div class="alert alert-info">
+                <ol>
+                    <li>使用上方診斷信息確定具體問題</li>
+                    <li>檢查缺失的模板和靜態文件，如有必要請創建它們</li>
+                    <li>確保 Firebase 配置正確</li>
+                    <li>嘗試清除瀏覽器快取 (Ctrl+F5)</li>
+                    <li>查看伺服器日誌獲取更多信息</li>
+                </ol>
+            </div>
+            
+            <div class="text-center mt-4">
+                <a href="/test" class="btn btn-primary me-2">基本測試頁面</a>
+                <a href="/debug" class="btn btn-info me-2">調試信息</a>
+                <a href="/" class="btn btn-secondary">返回首頁</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

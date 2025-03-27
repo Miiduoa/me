@@ -128,14 +128,41 @@ app.register_blueprint(auth_bp)
 
 @app.route('/')
 def index():
-    style = session.get('style', 'traditional')
+    """網站首頁"""
+    try:
+        # 確定當前風格
+        style = session.get('style', 'traditional')
+        
+        if style == 'threads':
+            return redirect(url_for('threads_home'))
+        
+        # 獲取最新電影
+        movies = get_all_documents('movies', 6, 'date', 'desc')
+        
+        # 標記用戶已喜歡的電影
+        user_id = session.get('user_id')
+        if user_id:
+            liked_movies = get_user_liked_movies(user_id)
+            liked_ids = [movie['id'] for movie in liked_movies]
+            
+            for movie in movies:
+                movie['user_liked'] = movie['id'] in liked_ids
+        
+        # 獲取推薦電影
+        recommended_movies = []
+        if user_id:
+            recommended_movies = get_movie_recommendations(user_id, limit=3)
+        
+        # 確保函數始終返回有效響應
+        if style == 'social':
+            return render_template('index_social.html', movies=movies, recommended_movies=recommended_movies)
+        else:
+            return render_template('index.html', movies=movies, recommended_movies=recommended_movies)
     
-    if style == 'social':
-        return redirect(url_for('social_home'))
-    elif style == 'threads':
-        return redirect(url_for('threads_home'))
-    
-    # 傳統風格的主頁代碼...
+    except Exception as e:
+        logger.error(f"首頁錯誤: {str(e)}")
+        # 發生錯誤時也返回有效響應
+        return render_template('error.html', error=str(e)), 500
 
 @app.route("/today")
 def today():
@@ -869,7 +896,67 @@ def test_page():
                           firebase_ok=firebase_ok,
                           session_data=dict(session))
 
+@app.route('/system-check')
+def system_check():
+    """全面系統檢查，檢測所有可能的錯誤來源"""
+    results = {
+        'firebase': {'status': 'unknown', 'details': ''},
+        'routes': {'status': 'unknown', 'details': []},
+        'templates': {'status': 'unknown', 'details': []},
+        'session': {'status': 'unknown', 'details': {}}
+    }
+    
+    # 1. 檢查 Firebase 連接
+    try:
+        db = initialize_firebase()
+        # 嘗試一個簡單的讀取操作
+        db.collection('users').limit(1).get()
+        results['firebase'] = {'status': 'ok', 'details': '連接成功'}
+    except Exception as e:
+        results['firebase'] = {'status': 'error', 'details': str(e)}
+    
+    # 2. 檢查關鍵路由
+    key_routes = ['index', 'movies', 'threads_home', 'threads_movies', 'set_style']
+    for route in key_routes:
+        try:
+            url = url_for(route)
+            results['routes']['details'].append({'route': route, 'url': url, 'status': 'ok'})
+        except Exception as e:
+            results['routes']['details'].append({'route': route, 'error': str(e), 'status': 'error'})
+    
+    results['routes']['status'] = 'ok' if all(r['status'] == 'ok' for r in results['routes']['details']) else 'error'
+    
+    # 3. 檢查關鍵模板
+    key_templates = ['base.html', 'base_threads.html', 'index.html', 'index_threads.html', 'movies_threads.html']
+    for template in key_templates:
+        template_path = os.path.join(app.root_path, 'templates', template)
+        if os.path.exists(template_path):
+            results['templates']['details'].append({'template': template, 'status': 'ok'})
+        else:
+            results['templates']['details'].append({'template': template, 'status': 'missing'})
+    
+    results['templates']['status'] = 'ok' if all(t['status'] == 'ok' for t in results['templates']['details']) else 'error'
+    
+    # 4. 檢查 session
+    results['session']['details'] = dict(session)
+    results['session']['status'] = 'ok' if session else 'empty'
+    
+    # 5. 檢查靜態文件
+    static_files = ['css/style.css', 'css/threads.css', 'js/main.js']
+    results['static'] = {'status': 'unknown', 'details': []}
+    
+    for file in static_files:
+        file_path = os.path.join(app.root_path, 'static', file)
+        if os.path.exists(file_path):
+            results['static']['details'].append({'file': file, 'status': 'ok'})
+        else:
+            results['static']['details'].append({'file': file, 'status': 'missing'})
+    
+    results['static']['status'] = 'ok' if all(f['status'] == 'ok' for f in results['static']['details']) else 'error'
+    
+    return render_template('system_check.html', results=results)
+
 app.jinja_env.undefined = jinja2.Undefined  # 允許未定義的變量
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=5001)
