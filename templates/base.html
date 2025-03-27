@@ -49,13 +49,13 @@
                         <a class="nav-link {{ 'active' if request.path.startswith('/movies') }}" href="{{ url_for('movies') }}"><i class="fas fa-film me-1"></i> 最新電影</a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
                             <i class="fas fa-palette me-1"></i> 介面風格
                         </a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{{ url_for('switch_style', style='traditional') }}">傳統風格</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('switch_style', style='social') }}">社交風格</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('switch_style', style='threads') }}">Threads風格</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('set_style', style='traditional') }}">傳統風格</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('set_style', style='social') }}">社交風格</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('set_style', style='threads') }}">Threads風格</a></li>
                         </ul>
                     </li>
                     {% if session.get('user_id') %}

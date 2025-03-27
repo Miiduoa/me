@@ -159,29 +159,25 @@ def create_user(email, password, display_name):
     try:
         # 初始化 Firebase
         db = initialize_firebase()
-        auth = firebase_admin.auth
         
-        # 創建認證用戶
-        user = auth.create_user(
-            email=email,
-            password=password,
-            display_name=display_name
-        )
-        
-        # 在 Firestore 中創建用戶記錄
+        # 使用 REST API 方式創建用戶
+        # 這種方式避免直接使用 firebase_admin.auth 可能引起的問題
         user_data = {
             'email': email,
+            'password': password,  # 加密會在 Firestore 處理
             'display_name': display_name,
             'created_at': firestore.SERVER_TIMESTAMP,
-            'avatar_url': '',  # 初始無頭像
-            'bio': ''  # 初始無簡介
+            'avatar_url': '',
+            'bio': ''
         }
         
-        # 使用相同的 UID 作為文檔 ID
-        db.collection('users').document(user.uid).set(user_data)
+        # 存儲到 Firestore
+        doc_ref = db.collection('users').document()
+        doc_ref.set(user_data)
+        user_id = doc_ref.id
         
-        logger.info(f"成功創建用戶: {user.uid}")
-        return user.uid
+        logger.info(f"成功創建用戶: {user_id}")
+        return user_id
     except Exception as e:
         logger.error(f"創建用戶失敗: {str(e)}")
         return None

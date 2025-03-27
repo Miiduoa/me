@@ -435,32 +435,12 @@ def admin_dashboard():
         logger.error(f"顯示管理員儀表板時發生錯誤: {str(e)}")
         return render_template('error.html', error='無法載入管理員儀表板'), 500
 
-@app.route("/set_language", methods=["POST"])
+@app.route("/set_language", methods=['POST'])
 def set_language():
-    if 'user_id' not in session:
-        # 未登入用戶使用Cookie存儲語言偏好
-        language = request.form.get('language', 'zh-TW')
-        response = make_response(redirect(request.referrer or '/'))
-        response.set_cookie('preferred_language', language, max_age=365*24*60*60)
-        return response
-    
-    try:
-        # 登入用戶將語言偏好保存到Firebase
-        user_id = session.get('user_id')
-        language = request.form.get('language', 'zh-TW')
-        
-        db = initialize_firebase()
-        db.collection('users').document(user_id).update({
-            'preferred_language': language
-        })
-        
-        # 同時設置Cookie
-        response = make_response(redirect(request.referrer or '/'))
-        response.set_cookie('preferred_language', language, max_age=365*24*60*60)
-        return response
-    except Exception as e:
-        logger.error(f"設置語言偏好時發生錯誤: {str(e)}")
-        return render_template('error.html', error='無法設置語言偏好'), 500
+    """設置用戶語言偏好"""
+    language = request.form.get('language', 'zh-TW')
+    session['language'] = language
+    return redirect(request.referrer or url_for('index'))
 
 @app.errorhandler(404)
 def page_not_found(e):
@@ -660,45 +640,35 @@ def social_rankings():
     
     return render_template('rankings_social.html', movies=movies, ranking_type=ranking_type)
 
-@app.route('/switch-style')
-def switch_style():
-    current_style = session.get('style', 'traditional')
-    
-    # 循環切換三種風格: traditional -> social -> threads -> traditional
-    if current_style == 'traditional':
-        session['style'] = 'social'
-    elif current_style == 'social':
-        session['style'] = 'threads'
-    else:
-        session['style'] = 'traditional'
-    
-    # 重定向回當前頁面
-    return redirect(request.referrer or url_for('index'))
+@app.route('/set-style/<style>')
+def set_style(style):
+    """設置用戶介面風格偏好"""
+    if style in ['traditional', 'social', 'threads']:
+        session['style'] = style
+        # 記錄風格變更
+        logger.info(f"用戶風格變更: {style}")
+        # 重定向到來源頁面或首頁
+        return redirect(request.referrer or url_for('index'))
+    return redirect(url_for('index'))
 
 # Threads 風格頁面路由
 @app.route('/threads')
 def threads_home():
-    # 獲取貼文和電影
-    posts = get_posts(limit=10)
-    movies = get_all_documents('movies', 5, 'date', 'desc')
-    
-    # 標記用戶已喜歡的電影
-    user_id = session.get('user_id')
-    if user_id:
-        liked_movies = get_user_liked_movies(user_id)
-        liked_ids = [movie['id'] for movie in liked_movies]
+    """Threads風格首頁"""
+    try:
+        # 獲取貼文列表
+        posts = get_posts(limit=20)
         
-        for movie in movies:
-            movie['user_liked'] = movie['id'] in liked_ids
-            # 獲取喜歡數量
-            movie['likes_count'] = count_likes(movie['id'])
-    
-    # 獲取用戶資訊（如果已登入）
-    user = None
-    if user_id:
-        user = get_document('users', user_id)
-    
-    return render_template('index_threads.html', movies=movies, posts=posts, user=user)
+        # 獲取用戶信息
+        user = None
+        user_id = session.get('user_id')
+        if user_id:
+            user = get_document('users', user_id)
+        
+        return render_template('index_threads.html', posts=posts, user=user)
+    except Exception as e:
+        logger.error(f"Threads首頁錯誤: {str(e)}")
+        return render_template('error.html', error=str(e)), 500
 
 @app.route('/movies/threads')
 def threads_movies():
@@ -882,6 +852,22 @@ def debug_info():
     }
     
     return render_template('debug.html', info=info)
+
+@app.route('/test')
+def test_page():
+    """測試頁面，驗證系統基本功能"""
+    try:
+        # 測試 Firebase 連接
+        db = initialize_firebase()
+        firebase_ok = True
+    except Exception as e:
+        firebase_ok = False
+        logger.error(f"Firebase 連接測試失敗: {str(e)}")
+    
+    # 返回測試結果
+    return render_template('test.html', 
+                          firebase_ok=firebase_ok,
+                          session_data=dict(session))
 
 app.jinja_env.undefined = jinja2.Undefined  # 允許未定義的變量
 

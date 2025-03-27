@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+
+{% block title %}系統測試 - 顧晉瑋的網站{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="card">
+        <div class="card-header bg-dark text-white">
+            <h4>系統測試</h4>
+        </div>
+        <div class="card-body">
+            <h5>基本連接測試</h5>
+            <ul class="list-group mb-4">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    Firebase 連接
+                    {% if firebase_ok %}
+                    <span class="badge bg-success">正常</span>
+                    {% else %}
+                    <span class="badge bg-danger">失敗</span>
+                    {% endif %}
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    Session 狀態
+                    {% if session_data %}
+                    <span class="badge bg-success">正常</span>
+                    {% else %}
+                    <span class="badge bg-warning">空</span>
+                    {% endif %}
+                </li>
+            </ul>
+            
+            <h5>功能測試按鈕</h5>
+            <div class="mb-3">
+                <button id="test-style-switch" class="btn btn-primary me-2">測試風格切換</button>
+                <button id="test-firebase" class="btn btn-info me-2">測試 Firebase 讀取</button>
+            </div>
+            
+            <h5>Session 內容</h5>
+            <pre class="bg-light p-3 rounded">{{ session_data|pprint }}</pre>
+            
+            <h5>測試結果</h5>
+            <div id="test-results" class="alert alert-secondary">尚未執行測試</div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('test-style-switch').addEventListener('click', function() {
+        let currentStyle = '{{ session_data.get("style", "traditional") }}';
+        let newStyle = currentStyle === 'traditional' ? 'threads' : 'traditional';
+        
+        fetch(`/set-style/${newStyle}`)
+            .then(response => {
+                if (response.ok) {
+                    document.getElementById('test-results').className = 'alert alert-success';
+                    document.getElementById('test-results').textContent = `風格已切換為 ${newStyle}，正在重新載入...`;
+                    setTimeout(() => window.location.reload(), 1000);
+                } else {
+                    throw new Error('風格切換失敗');
+                }
+            })
+            .catch(error => {
+                document.getElementById('test-results').className = 'alert alert-danger';
+                document.getElementById('test-results').textContent = `錯誤: ${error.message}`;
+            });
+    });
+    
+    document.getElementById('test-firebase').addEventListener('click', function() {
+        fetch('/debug')
+            .then(response => {
+                if (response.ok) {
+                    document.getElementById('test-results').className = 'alert alert-success';
+                    document.getElementById('test-results').textContent = `Firebase 測試成功，請查看 /debug 頁面獲取詳細信息`;
+                } else {
+                    throw new Error('Firebase 測試失敗');
+                }
+            })
+            .catch(error => {
+                document.getElementById('test-results').className = 'alert alert-danger';
+                document.getElementById('test-results').textContent = `錯誤: ${error.message}`;
+            });
+    });
+</script>
+{% endblock %} 
