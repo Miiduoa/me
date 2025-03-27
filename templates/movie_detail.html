@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}{{ movie.title }} - 顧晉瑋的網站{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-4">
+        {% if movie.poster %}
+        <img src="{{ movie.poster }}" class="img-fluid rounded" alt="{{ movie.title }}">
+        {% endif %}
+    </div>
+    <div class="col-md-8">
+        <h1>{{ movie.title }}</h1>
+        <p class="text-muted">上映日期: {{ movie.date }}</p>
+        <p class="text-muted">評分: {{ movie.rating }}</p>
+        
+        <div class="d-flex align-items-center mb-3">
+            <span class="me-2">
+                <i class="fas fa-heart {% if user_liked %}text-danger{% else %}text-secondary{% endif %}"></i>
+                {{ likes_count }} 人喜歡
+            </span>
+            
+            {% if session.get('user_id') %}
+            <form action="{{ url_for('like_movie', movie_id=movie.id) }}" method="POST">
+                <button type="submit" class="btn btn-sm btn-{% if user_liked %}danger{% else %}outline-danger{% endif %}">
+                    {% if user_liked %}取消喜歡{% else %}喜歡{% endif %}
+                </button>
+            </form>
+            {% else %}
+            <a href="{{ url_for('auth.login') }}" class="btn btn-sm btn-outline-primary">登入後可點讚</a>
+            {% endif %}
+        </div>
+        
+        {% if movie.link %}
+        <a href="{{ movie.link }}" target="_blank" class="btn btn-primary">查看原始資料</a>
+        {% endif %}
+        
+        <a href="{{ url_for('movies') }}" class="btn btn-secondary">返回列表</a>
+    </div>
+</div>
+{% endblock %} 

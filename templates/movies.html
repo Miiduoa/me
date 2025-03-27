@@ -34,8 +34,9 @@
                     <small class="text-muted">評分: {{ movie.rating }}</small>
                 </p>
                 {% if movie.link %}
-                <a href="{{ movie.link }}" target="_blank" class="btn btn-primary">查看詳情</a>
+                <a href="{{ movie.link }}" target="_blank" class="btn btn-outline-primary btn-sm">原始資料</a>
                 {% endif %}
+                <a href="{{ url_for('movie_detail', movie_id=movie.id) }}" class="btn btn-primary btn-sm">查看詳情</a>
             </div>
         </div>
     </div>

@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, Blueprint, redirect, session
 from datetime import datetime, timezone, timedelta
-from firebase_manager import authenticate_user, check_email_exists, create_user, get_all_documents
+from firebase_manager import authenticate_user, check_email_exists, create_user, get_all_documents, add_like, get_document, count_likes, check_user_liked
 from web_crawler import crawl_movies
 from forms import LoginForm, RegisterForm
 import os
@@ -131,6 +131,33 @@ def update_movies():
     movies = crawl_movies()
     return redirect("/movies")
 
+@app.route("/movie/<movie_id>/like", methods=["POST"])
+def like_movie(movie_id):
+    if 'user_id' not in session:
+        return redirect('/login')
+    
+    # 添加用戶對電影的喜歡操作到 Firebase
+    add_like(session['user_id'], movie_id)
+    return redirect(f"/movie/{movie_id}")
+
+@app.route("/movie/<movie_id>")
+def movie_detail(movie_id):
+    # 從Firebase獲取電影數據
+    movie = get_document("movies", movie_id)
+    
+    if not movie:
+        return render_template('error.html', error='找不到此電影'), 404
+    
+    # 獲取此電影的喜歡數量
+    likes_count = count_likes(movie_id)
+    
+    # 檢查當前用戶是否已喜歡此電影
+    user_liked = False
+    if 'user_id' in session:
+        user_liked = check_user_liked(session['user_id'], movie_id)
+    
+    return render_template('movie_detail.html', movie=movie, likes_count=likes_count, user_liked=user_liked)
+
 @app.errorhandler(404)
 def page_not_found(e):
     return render_template('error.html', error='找不到頁面'), 404
@@ -145,6 +172,10 @@ def add_security_headers(response):
     response.headers['X-Content-Type-Options'] = 'nosniff'
     response.headers['X-Frame-Options'] = 'SAMEORIGIN'
     response.headers['X-XSS-Protection'] = '1; mode=block'
+    
+    # 添加 Content Security Policy
+    response.headers['Content-Security-Policy'] = "default-src 'self'; script-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; img-src 'self' data:;"
+    
     return response
 
 if __name__ == "__main__":

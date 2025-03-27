@@ -32,7 +32,9 @@ def get_document(collection, doc_id):
     db = initialize_firebase()
     doc = db.collection(collection).document(doc_id).get()
     if doc.exists:
-        return doc.to_dict()
+        data = doc.to_dict()
+        data['id'] = doc_id  # 添加文檔ID到數據中
+        return data
     return None
 
 # 添加到現有文件中
@@ -67,6 +69,40 @@ def get_all_documents(collection):
     """獲取集合中的所有文檔"""
     db = initialize_firebase()
     docs = db.collection(collection).get()
-    return [doc.to_dict() for doc in docs]
+    return [{'id': doc.id, **doc.to_dict()} for doc in docs]  # 合併ID與數據
+
+def add_like(user_id, movie_id):
+    """添加用戶對電影的喜歡操作"""
+    db = initialize_firebase()
+    like_data = {
+        'user_id': user_id,
+        'movie_id': movie_id,
+        'created_at': firestore.SERVER_TIMESTAMP
+    }
+    
+    # 檢查用戶是否已經喜歡過這部電影
+    likes = db.collection('likes').where('user_id', '==', user_id).where('movie_id', '==', movie_id).limit(1).get()
+    
+    if len(list(likes)) > 0:
+        # 用戶已經喜歡過，可以選擇取消喜歡（刪除記錄）
+        for like in likes:
+            like.reference.delete()
+        return False
+    else:
+        # 用戶還沒喜歡過，添加喜歡記錄
+        add_document('likes', like_data)
+        return True
+
+def count_likes(movie_id):
+    """計算電影獲得的喜歡數量"""
+    db = initialize_firebase()
+    likes = db.collection('likes').where('movie_id', '==', movie_id).get()
+    return len(list(likes))
+
+def check_user_liked(user_id, movie_id):
+    """檢查用戶是否已經喜歡某電影"""
+    db = initialize_firebase()
+    likes = db.collection('likes').where('user_id', '==', user_id).where('movie_id', '==', movie_id).limit(1).get()
+    return len(list(likes)) > 0
 
 # ... 其他操作函數 ... 

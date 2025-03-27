@@ -6,6 +6,11 @@
     <title>{% block title %}顧晉瑋的網站{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <meta name="description" content="顧晉瑋的個人網站，提供最新電影資訊與個人作品展示">
+    <meta name="keywords" content="顧晉瑋, 網站開發, 電影資訊, Flask, Firebase">
+    <meta name="author" content="顧晉瑋">
+    <link rel="canonical" href="{{ request.url }}">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
