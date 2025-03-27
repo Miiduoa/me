@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}通知 - CineSocial{% endblock %}
+
+{% block content %}
+<div class="social-card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-bell me-2"></i>通知</h5>
+        {% if notifications and notifications|length > 0 %}
+        <a href="#" class="btn btn-sm btn-outline-primary">
+            全部標為已讀
+        </a>
+        {% endif %}
+    </div>
+    <div class="card-body p-0">
+        {% for notification in notifications %}
+        <div class="p-3 {% if not notification.is_read %}bg-light{% endif %} border-bottom">
+            <div class="d-flex">
+                <img src="{{ notification.user_avatar }}" class="social-avatar me-3" alt="{{ notification.user_name }}">
+                <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <span>
+                            <strong>{{ notification.user_name }}</strong> 
+                            {{ notification.content }}
+                        </span>
+                        {% if not notification.is_read %}
+                        <span class="badge bg-primary rounded-pill">新</span>
+                        {% endif %}
+                    </div>
+                    <div class="small text-muted">{{ notification.time_ago }}</div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-bell-slash fa-3x mb-3 text-muted"></i>
+            <h5>暫無通知</h5>
+            <p class="text-muted">當有用戶與您互動時，您將在這裡看到通知</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %} 

@@ -1,245 +1,283 @@
 {% extends "base.html" %}
 
-{% block title %}{{ movie.title }} - 顧晉瑋的網站{% endblock %}
+{% block title %}{{ movie.title }} - CineSocial{% endblock %}
 
 {% block content %}
-<nav aria-label="breadcrumb" class="mb-4">
-    <ol class="breadcrumb">
-        <li class="breadcrumb-item"><a href="/">首頁</a></li>
-        <li class="breadcrumb-item"><a href="/movies">電影</a></li>
-        <li class="breadcrumb-item active" aria-current="page">{{ movie.title }}</li>
-    </ol>
-</nav>
-
-<div class="row">
-    <div class="col-md-4 mb-4 mb-md-0">
-        <div class="card shadow">
-            {% if movie.poster %}
-            <img src="{{ movie.poster }}" class="card-img-top img-fluid" alt="{{ movie.title }}">
-            {% else %}
-            <div class="bg-light p-5 text-center">
-                <i class="fas fa-film fa-4x text-secondary"></i>
-                <p class="mt-3">無海報</p>
-            </div>
-            {% endif %}
-            <div class="card-body bg-light">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="mb-0"><i class="fas fa-star text-warning me-1"></i> {{ movie.rating }}</h5>
-                        <small class="text-muted">用戶評分</small>
-                    </div>
-                    <div class="text-end">
-                        <h5 class="mb-0"><i class="fas fa-heart text-danger me-1"></i> {{ likes_count }}</h5>
-                        <small class="text-muted">人喜歡</small>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="mt-3">
-            {% if session.get('user_id') %}
-            <form action="{{ url_for('like_movie', movie_id=movie.id) }}" method="POST" class="mb-3">
-                <button type="submit" class="btn btn-{{ 'danger' if user_liked else 'outline-danger' }} w-100">
-                    <i class="fas fa-heart me-1"></i> {{ '取消喜歡' if user_liked else '喜歡電影' }}
-                </button>
-            </form>
-            {% else %}
-            <a href="{{ url_for('auth.login') }}" class="btn btn-outline-primary w-100 mb-3">
-                <i class="fas fa-sign-in-alt me-1"></i> 登入後可點讚
-            </a>
-            {% endif %}
-            
-            {% if movie.link %}
-            <a href="{{ movie.link }}" target="_blank" class="btn btn-outline-secondary w-100 mb-3">
-                <i class="fas fa-external-link-alt me-1"></i> 查看原始資料
-            </a>
-            {% endif %}
-        </div>
-    </div>
-    
-    <div class="col-md-8">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h1 class="card-title display-6 mb-3">{{ movie.title }}</h1>
-                
-                <div class="mb-4">
-                    <span class="badge bg-primary me-2"><i class="fas fa-calendar me-1"></i> {{ movie.date }}</span>
-                    {% if movie.category %}
-                    <span class="badge bg-secondary"><i class="fas fa-tag me-1"></i> {{ movie.category }}</span>
-                    {% endif %}
-                </div>
-                
-                {% if movie.description %}
-                <h4>劇情簡介</h4>
-                <p class="card-text">{{ movie.description }}</p>
-                {% endif %}
-            </div>
-        </div>
-        
-        <div class="card mt-4 shadow-sm">
-            <div class="card-header bg-light">
-                <h4 class="mb-0"><i class="fas fa-info-circle me-2"></i>電影資訊</h4>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    {% if movie.director %}
-                    <div class="col-md-6 mb-3">
-                        <strong><i class="fas fa-video me-1"></i> 導演:</strong> {{ movie.director }}
-                    </div>
-                    {% endif %}
-                    
-                    {% if movie.actors %}
-                    <div class="col-md-6 mb-3">
-                        <strong><i class="fas fa-users me-1"></i> 演員:</strong> {{ movie.actors }}
-                    </div>
-                    {% endif %}
-                    
-                    <div class="col-md-6 mb-3">
-                        <strong><i class="fas fa-calendar-alt me-1"></i> 上映日期:</strong> {{ movie.date }}
-                    </div>
-                    
-                    <div class="col-md-6 mb-3">
-                        <strong><i class="fas fa-star me-1"></i> 評分:</strong> {{ movie.rating }}
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="card mt-4 shadow-sm">
-            <div class="card-header bg-light d-flex justify-content-between align-items-center">
-                <h4 class="mb-0"><i class="fas fa-comments me-2"></i>觀眾評論</h4>
-                <span class="badge bg-primary rounded-pill" id="comments-count">{{ comments|length }}</span>
-            </div>
-            <div class="card-body">
-                {% if session.get('user_id') %}
-                <form action="{{ url_for('add_comment', movie_id=movie.id) }}" method="POST" class="mb-4">
-                    <div class="mb-3">
-                        <label for="comment" class="form-label">發表評論</label>
-                        <textarea class="form-control" id="comment" name="comment" rows="3" required></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-paper-plane me-1"></i> 發表評論
-                    </button>
-                </form>
+<!-- 電影詳情卡片 -->
+<div class="social-card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4 mb-3 mb-md-0">
+                {% if movie.image_url %}
+                <img src="{{ movie.image_url }}" class="img-fluid rounded" alt="{{ movie.title }}">
                 {% else %}
-                <div class="alert alert-info">
-                    <i class="fas fa-info-circle me-1"></i> 請<a href="{{ url_for('auth.login') }}" class="alert-link">登入</a>後發表評論
+                <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded" style="height: 400px;">
+                    <i class="fas fa-film fa-5x"></i>
                 </div>
                 {% endif %}
+            </div>
+            <div class="col-md-8">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <h1 class="mb-0">{{ movie.title }}</h1>
+                    <div>
+                        <button class="btn btn-outline-primary rounded-pill" id="likeButton">
+                            {% if movie.user_liked %}
+                            <i class="fas fa-heart text-danger"></i> 已收藏
+                            {% else %}
+                            <i class="far fa-heart"></i> 收藏
+                            {% endif %}
+                        </button>
+                    </div>
+                </div>
                 
-                <div id="comments-container">
-                    {% if comments %}
-                        {% for comment in comments %}
-                        <div class="card mb-3 border-0 bg-light">
-                            <div class="card-body">
-                                <div class="d-flex">
-                                    <div class="avatar-circle-sm me-3">
-                                        <span class="avatar-text-sm">{{ comment.userName[:1] }}</span>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <div class="d-flex justify-content-between align-items-center mb-2">
-                                            <h6 class="mb-0">{{ comment.userName }}</h6>
-                                            <small class="text-muted">{{ comment.created_at.strftime('%Y-%m-%d %H:%M') if comment.created_at else '' }}</small>
-                                        </div>
-                                        <p class="mb-0">{{ comment.text }}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {% endfor %}
-                    {% else %}
-                        <div class="text-center py-4" id="no-comments">
-                            <i class="fas fa-comment-slash fa-2x text-muted mb-3"></i>
-                            <p class="mb-0">目前還沒有評論</p>
-                        </div>
-                    {% endif %}
+                <div class="d-flex flex-wrap mb-3">
+                    <span class="badge bg-secondary me-2 mb-2">{{ movie.date }}</span>
+                    <span class="badge bg-primary me-2 mb-2">
+                        <i class="fas fa-star me-1"></i> {{ movie.rating|default('暫無評分') }}
+                    </span>
+                    {% for genre in movie.genre %}
+                    <span class="badge bg-info text-dark me-2 mb-2">{{ genre }}</span>
+                    {% endfor %}
+                </div>
+                
+                <p class="lead text-muted mb-4">{{ movie.description|default('暫無簡介') }}</p>
+                
+                <div class="d-flex align-items-center mb-4">
+                    <div class="me-3">
+                        <i class="fas fa-heart text-danger me-1"></i>
+                        <span>{{ movie.likes_count|default(0) }} 人收藏</span>
+                    </div>
+                    <div class="me-3">
+                        <i class="fas fa-comment text-primary me-1"></i>
+                        <span>{{ comments|length }} 則評論</span>
+                    </div>
+                    <div>
+                        <button class="btn btn-sm btn-light" data-bs-toggle="modal" data-bs-target="#shareModal">
+                            <i class="fas fa-share-alt me-1"></i> 分享
+                        </button>
+                    </div>
                 </div>
             </div>
-        </div>
-        
-        <div class="mt-4">
-            <a href="{{ url_for('movies') }}" class="btn btn-outline-primary">
-                <i class="fas fa-arrow-left me-1"></i> 返回電影列表
-            </a>
         </div>
     </div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-functions.js"></script>
-<script>
-  // 初始化 Firebase
-  const firebaseConfig = {
-    apiKey: "AIzaSyA74yCIdADHUNyeWAIrPg5jDLd7vHYdMIY",
-    authDomain: "project-7332910669653362321.firebaseapp.com",
-    projectId: "project-7332910669653362321",
-    storageBucket: "project-7332910669653362321.firebasestorage.app",
-    messagingSenderId: "510920038201",
-    appId: "1:510920038201:web:f7396cad3ff1c407defae8",
-    measurementId: "G-SLTJQRT9QD"
-  };
-  firebase.initializeApp(firebaseConfig);
-  
-  // 追蹤電影查看
-  const movieId = "{{ movie.id }}";
-  const trackMovieView = firebase.functions().httpsCallable('trackMovieView');
-  trackMovieView({ movieId })
-    .then(result => console.log('View tracking success'))
-    .catch(error => console.error('View tracking error:', error));
-</script>
-
-<script>
-// 實時評論更新
-const db = firebase.firestore();
-const commentsRef = db.collection('movies').doc('{{ movie.id }}').collection('comments').orderBy('created_at', 'desc');
-
-// 監聽實時更新
-commentsRef.onSnapshot((snapshot) => {
-    let changes = snapshot.docChanges();
-    let commentsCount = parseInt(document.getElementById('comments-count').textContent);
+<!-- 評論區 -->
+<div class="social-card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-comments me-2"></i>評論區</h5>
+    </div>
     
-    changes.forEach(change => {
-        if (change.type === 'added') {
-            // 新評論被添加
-            const comment = change.doc.data();
-            const timestamp = comment.created_at ? new Date(comment.created_at.toDate()).toLocaleString('zh-TW') : '';
-            
-            // 創建新評論元素
-            const commentElement = document.createElement('div');
-            commentElement.className = 'card mb-3 border-0 bg-light';
-            commentElement.id = `comment-${change.doc.id}`;
-            commentElement.innerHTML = `
-                <div class="card-body">
-                    <div class="d-flex">
-                        <div class="avatar-circle-sm me-3">
-                            <span class="avatar-text-sm">${comment.userName.charAt(0)}</span>
+    {% if 'user_id' in session %}
+    <div class="card-body border-bottom">
+        <form id="commentForm">
+            <div class="d-flex">
+                <img src="{{ user.avatar_url|default('/static/images/default-avatar.png') }}" class="social-avatar me-2" alt="{{ session.get('user_name') }}">
+                <div class="flex-grow-1">
+                    <div class="form-floating mb-2">
+                        <textarea class="form-control" id="commentText" placeholder="發表評論" style="height: 100px"></textarea>
+                        <label for="commentText">寫下你的評論...</label>
+                    </div>
+                    <button type="submit" class="btn btn-primary px-4 rounded-pill float-end">發表評論</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    {% endif %}
+    
+    <div class="card-body p-0">
+        {% if comments %}
+        <ul class="list-group list-group-flush">
+            {% for comment in comments %}
+            <li class="list-group-item">
+                <div class="d-flex">
+                    <img src="{{ comment.user_avatar|default('/static/images/default-avatar.png') }}" alt="{{ comment.user_name }}" class="social-avatar me-2">
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between">
+                            <h6 class="mb-0">{{ comment.user_name }}</h6>
+                            <small class="text-muted">{{ comment.time_ago }}</small>
                         </div>
-                        <div class="flex-grow-1">
-                            <div class="d-flex justify-content-between align-items-center mb-2">
-                                <h6 class="mb-0">${comment.userName}</h6>
-                                <small class="text-muted">${timestamp}</small>
-                            </div>
-                            <p class="mb-0">${comment.text}</p>
+                        <p class="mb-1">{{ comment.text }}</p>
+                        <div class="d-flex align-items-center">
+                            <button class="btn btn-sm text-muted p-0 me-3">
+                                <i class="far fa-thumbs-up me-1"></i>讚
+                            </button>
+                            <button class="btn btn-sm text-muted p-0">
+                                <i class="far fa-comment me-1"></i>回覆
+                            </button>
                         </div>
                     </div>
                 </div>
-            `;
-            
-            // 插入到評論容器
-            const commentsContainer = document.getElementById('comments-container');
-            const noComments = document.getElementById('no-comments');
-            
-            if (noComments) {
-                commentsContainer.removeChild(noComments);
-            }
-            
-            commentsContainer.insertBefore(commentElement, commentsContainer.firstChild);
-            commentsCount++;
-        }
-    });
+            </li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <div class="text-center py-5">
+            <i class="far fa-comment-dots fa-3x mb-3 text-muted"></i>
+            <p>尚無評論</p>
+            <p class="text-muted">成為第一個評論的人吧！</p>
+        </div>
+        {% endif %}
+    </div>
     
-    // 更新評論計數
-    document.getElementById('comments-count').textContent = commentsCount;
+    {% if comments|length > 3 %}
+    <div class="card-footer text-center">
+        <button class="btn btn-link">查看更多評論</button>
+    </div>
+    {% endif %}
+</div>
+
+<!-- 相關電影 -->
+{% if related_movies %}
+<div class="social-card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0"><i class="fas fa-film me-2"></i>相關電影</h5>
+    </div>
+    <div class="card-body">
+        <div class="row row-cols-2 row-cols-md-4 g-3">
+            {% for movie in related_movies %}
+            <div class="col">
+                <a href="{{ url_for('movie_detail', movie_id=movie.id) }}" class="text-decoration-none">
+                    <div class="card h-100 border-0">
+                        {% if movie.image_url %}
+                        <img src="{{ movie.image_url }}" class="card-img-top" alt="{{ movie.title }}">
+                        {% else %}
+                        <div class="bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 200px;">
+                            <i class="fas fa-film fa-3x"></i>
+                        </div>
+                        {% endif %}
+                        <div class="card-body p-2">
+                            <h6 class="card-title text-truncate">{{ movie.title }}</h6>
+                            <p class="card-text small text-muted mb-0">
+                                {{ movie.date }}
+                                {% if movie.rating %}
+                                <span class="ms-1"><i class="fas fa-star text-warning"></i> {{ movie.rating }}</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- 分享模態框 -->
+<div class="modal fade" id="shareModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">分享電影</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-3">分享《{{ movie.title }}》到：</p>
+                <div class="d-flex justify-content-around mb-3">
+                    <button class="btn btn-light"><i class="fab fa-facebook fa-2x text-primary"></i></button>
+                    <button class="btn btn-light"><i class="fab fa-twitter fa-2x text-info"></i></button>
+                    <button class="btn btn-light"><i class="fab fa-line fa-2x text-success"></i></button>
+                    <button class="btn btn-light"><i class="fab fa-weixin fa-2x text-success"></i></button>
+                </div>
+                <div class="input-group">
+                    <input type="text" class="form-control" value="{{ request.url }}" readonly>
+                    <button class="btn btn-outline-secondary" type="button" id="copyLinkBtn">複製</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 點讚功能
+    const likeButton = document.getElementById('likeButton');
+    if (likeButton) {
+        likeButton.addEventListener('click', function() {
+            {% if 'user_id' in session %}
+            const movieId = '{{ movie.id }}';
+            fetch('/api/like-movie/' + movieId, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const icon = this.querySelector('i');
+                    if (data.liked) {
+                        icon.className = 'fas fa-heart text-danger';
+                        this.innerHTML = '<i class="fas fa-heart text-danger"></i> 已收藏';
+                    } else {
+                        icon.className = 'far fa-heart';
+                        this.innerHTML = '<i class="far fa-heart"></i> 收藏';
+                    }
+                    
+                    // 更新收藏計數
+                    const likeCountEl = document.querySelector('.fas.fa-heart.text-danger + span');
+                    if (likeCountEl) {
+                        let count = parseInt(likeCountEl.textContent);
+                        count = data.liked ? count + 1 : Math.max(0, count - 1);
+                        likeCountEl.textContent = `${count} 人收藏`;
+                    }
+                }
+            })
+            .catch(error => console.error('Error:', error));
+            {% else %}
+            window.location.href = '/login';
+            {% endif %}
+        });
+    }
+    
+    // 評論表單處理
+    const commentForm = document.getElementById('commentForm');
+    if (commentForm) {
+        commentForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const commentText = document.getElementById('commentText').value;
+            if (!commentText.trim()) return;
+            
+            fetch('/api/add-comment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify({
+                    movie_id: '{{ movie.id }}',
+                    text: commentText
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    }
+    
+    // 複製連結功能
+    const copyLinkBtn = document.getElementById('copyLinkBtn');
+    if (copyLinkBtn) {
+        copyLinkBtn.addEventListener('click', function() {
+            const linkInput = this.previousElementSibling;
+            linkInput.select();
+            document.execCommand('copy');
+            
+            this.textContent = '已複製';
+            setTimeout(() => {
+                this.textContent = '複製';
+            }, 2000);
+        });
+    }
 });
 </script>
 {% endblock %} 

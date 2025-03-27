@@ -1,83 +1,319 @@
 {% extends "base.html" %}
 
-{% block title %}首頁 - 顧晉瑋的網站{% endblock %}
+{% block title %}CineSocial - 顧晉瑋的社群網站{% endblock %}
 
 {% block content %}
-<!-- 頂部橫幅 -->
-<div class="p-4 p-md-5 mb-4 text-white rounded bg-dark">
-    <div class="row">
-        <div class="col-md-8 px-0">
-            <h1 class="display-4 fw-bold">歡迎來到顧晉瑋的個人網站</h1>
-            <p class="lead my-3">這是一個使用Flask和Firebase開發的個人網站，展示了最新電影資訊和我的個人作品。</p>
-            <p class="lead mb-0"><a href="/about" class="text-white fw-bold">了解更多關於我的資訊 <i class="fas fa-arrow-right"></i></a></p>
+<!-- 在首頁頂部添加快速訪問按鈕 -->
+<div class="text-center mb-3">
+    <a href="/explore" class="btn btn-primary">前往探索頁面</a>
+</div>
+
+<!-- 時間顯示 -->
+<div class="social-card mb-4">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="mb-0">📅 今天是 {{ now|default('現在時間') }}</h5>
+            <a href="/about" class="btn btn-sm btn-outline-primary rounded-pill">
+                👤 關於我
+            </a>
         </div>
     </div>
 </div>
 
-<!-- 功能區塊 -->
-<div class="row g-4 mb-5">
-    <div class="col-md-4">
-        <div class="card h-100 text-center border-0 shadow-sm">
-            <div class="card-body">
-                <div class="p-3 mb-3 bg-primary text-white rounded-circle d-inline-block">
-                    <i class="fas fa-film fa-2x"></i>
-                </div>
-                <h3 class="card-title">最新電影</h3>
-                <p class="card-text">瀏覽最新上映的電影資訊，包含評分和簡介，使用網路爬蟲技術自動更新。</p>
-                <a href="/movies" class="btn btn-primary">查看電影 <i class="fas fa-arrow-right ms-1"></i></a>
+<!-- 標籤切換 -->
+<div class="social-card mb-4">
+    <div class="card-body p-0">
+        <ul class="nav nav-tabs nav-fill" id="feedTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="recommended-tab" data-bs-toggle="tab" data-bs-target="#recommended-content" type="button" role="tab" aria-controls="recommended-content" aria-selected="true">
+                    🔍 推薦給你
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="following-tab" data-bs-toggle="tab" data-bs-target="#following-content" type="button" role="tab" aria-controls="following-content" aria-selected="false">
+                    👥 追蹤中
+                </button>
+            </li>
+        </ul>
+        
+        <div class="tab-content" id="feedTabsContent">
+            <!-- 推薦給你內容 -->
+            <div class="tab-pane fade show active" id="recommended-content" role="tabpanel" aria-labelledby="recommended-tab">
+                <!-- 這裡是現有的貼文列表代碼 -->
+                {% if posts %}
+                    {% for post in posts %}
+                    <!-- 現有的貼文卡片結構 -->
+                    <div class="social-post">
+                        <div class="social-post-header">
+                            <img src="{{ post.user_avatar|default('/static/images/default-avatar.png') }}" class="social-avatar me-2" alt="{{ post.user_name }}">
+                            <div>
+                                <div class="fw-bold">{{ post.user_name }}</div>
+                                <div class="small text-muted">{{ post.time_ago }}</div>
+                            </div>
+                        </div>
+                        <div class="social-post-body">
+                            <p>{{ post.text }}</p>
+                            {% if post.image_url %}
+                            <img src="{{ post.image_url }}" alt="貼文圖片" class="img-fluid rounded mb-3">
+                            {% endif %}
+                            
+                            {% if post.movie_id %}
+                            <div class="d-flex align-items-center p-2 rounded mb-3" style="background-color: #f8f9fa;">
+                                {% if post.movie_poster %}
+                                <img src="{{ post.movie_poster }}" alt="{{ post.movie_title }}" class="social-movie-thumbnail me-2">
+                                {% else %}
+                                <div class="social-movie-thumbnail d-flex align-items-center justify-content-center bg-secondary me-2">
+                                    <i class="fas fa-film text-light"></i>
+                                </div>
+                                {% endif %}
+                                <div>
+                                    <a href="{{ url_for('movie_detail', movie_id=post.movie_id) }}" class="text-decoration-none">{{ post.movie_title }}</a>
+                                    <div class="small text-muted">相關電影</div>
+                                </div>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="social-post-footer">
+                            <div class="social-post-actions">
+                                <button type="button" class="btn btn-light me-2">
+                                    👍 讚 ({{ post.likes_count|default(0) }})
+                                </button>
+                                <button type="button">
+                                    💬 留言 ({{ post.comments_count|default(0) }})
+                                </button>
+                                <button type="button">
+                                    🔄 分享
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                    <!-- 載入更多按鈕 -->
+                    <button class="btn btn-outline-primary w-100 mt-3" id="load-more">
+                        🔄 載入更多
+                    </button>
+                {% else %}
+                    <div class="text-center p-4">
+                        <p class="mb-0 text-muted">尚無推薦貼文</p>
+                    </div>
+                {% endif %}
             </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card h-100 text-center border-0 shadow-sm">
-            <div class="card-body">
-                <div class="p-3 mb-3 bg-success text-white rounded-circle d-inline-block">
-                    <i class="fas fa-user fa-2x"></i>
+            
+            <!-- 追蹤中內容 -->
+            <div class="tab-pane fade" id="following-content" role="tabpanel" aria-labelledby="following-tab">
+                <div id="following-posts-container">
+                    <!-- 這裡會通過AJAX動態加載追蹤中的貼文 -->
+                    <div class="text-center p-4" id="following-loading">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">載入中...</span>
+                        </div>
+                        <p class="mt-2">載入追蹤的貼文...</p>
+                    </div>
                 </div>
-                <h3 class="card-title">關於我</h3>
-                <p class="card-text">了解更多關於我的個人資訊、學習經歷和專業技能。展示我的作品和項目經驗。</p>
-                <a href="/about" class="btn btn-success">個人簡介 <i class="fas fa-arrow-right ms-1"></i></a>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-4">
-        <div class="card h-100 text-center border-0 shadow-sm">
-            <div class="card-body">
-                <div class="p-3 mb-3 bg-info text-white rounded-circle d-inline-block">
-                    <i class="fas fa-calendar-day fa-2x"></i>
-                </div>
-                <h3 class="card-title">現在時間</h3>
-                <p class="card-text">顯示當前臺灣時間，使用Python的datetime模組，展示後端開發能力。</p>
-                <a href="/today" class="btn btn-info text-white">查看時間 <i class="fas fa-arrow-right ms-1"></i></a>
             </div>
         </div>
     </div>
 </div>
 
-<!-- 電影精選區 -->
-{% if movies %}
-<h2 class="border-bottom pb-2 mb-4"><i class="fas fa-star me-2"></i>精選電影</h2>
-<div class="row g-4">
-    {% for movie in movies[:3] %}
-    <div class="col-md-4">
-        <div class="card h-100 shadow-sm">
-            {% if movie.poster %}
-            <img src="{{ movie.poster }}" class="card-img-top" alt="{{ movie.title }}">
-            {% endif %}
-            <div class="card-body">
-                <h5 class="card-title">{{ movie.title }}</h5>
-                <p class="card-text">
-                    <small class="text-muted">上映日期: {{ movie.date }}</small><br>
-                    <small class="text-muted">評分: {{ movie.rating }}</small>
-                </p>
-                <a href="{{ url_for('movie_detail', movie_id=movie.id) }}" class="btn btn-sm btn-primary">查看詳情</a>
-            </div>
+<!-- 發布貼文區 -->
+{% if 'user_id' in session %}
+<div class="social-card mb-4">
+    <div class="card-body">
+        <div class="d-flex">
+            <img src="{{ user.avatar_url|default('/static/images/default-avatar.png') }}" class="social-avatar me-2" alt="{{ user.display_name }}">
+            <form action="/create-post" method="POST" enctype="multipart/form-data" class="flex-grow-1">
+                <div class="form-floating mb-3">
+                    <textarea class="form-control" id="post-content" name="content" placeholder="分享你的想法..." style="height: 100px"></textarea>
+                    <label for="post-content">分享你的想法...</label>
+                </div>
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <button type="button" class="btn btn-light me-2">
+                            🖼️ 照片
+                        </button>
+                        <button type="button" class="btn btn-light">
+                            🎬 電影
+                        </button>
+                    </div>
+                    <button type="submit" class="btn btn-primary px-4 rounded-pill">發布</button>
+                </div>
+            </form>
         </div>
     </div>
-    {% endfor %}
-</div>
-<div class="text-center mt-4">
-    <a href="/movies" class="btn btn-outline-primary">查看更多電影 <i class="fas fa-arrow-right ms-1"></i></a>
 </div>
 {% endif %}
+
+<!-- 載入更多按鈕 -->
+{% if posts|length >= 5 %}
+<div class="text-center mt-4 mb-3">
+    <button class="btn btn-outline-primary rounded-pill px-4" id="load-more-btn">
+        🔄 載入更多
+    </button>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 點讚功能
+        const likeButtons = document.querySelectorAll('.social-post-actions button:first-child');
+        likeButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                // 添加點讚動畫和增加計數的功能
+                const icon = this.querySelector('i');
+                if (icon.classList.contains('fa-thumbs-up') && !icon.classList.contains('text-primary')) {
+                    icon.classList.add('text-primary');
+                    
+                    // 提取當前點讚數並增加
+                    const likeText = this.textContent.trim();
+                    const likeCount = parseInt(likeText.match(/\d+/)[0]) + 1;
+                    this.innerHTML = `<i class="fas fa-thumbs-up me-1 text-primary"></i> 讚 (${likeCount})`;
+                } else {
+                    icon.classList.remove('text-primary');
+                    
+                    // 提取當前點讚數並減少
+                    const likeText = this.textContent.trim();
+                    const likeCount = Math.max(0, parseInt(likeText.match(/\d+/)[0]) - 1);
+                    this.innerHTML = `<i class="fas fa-thumbs-up me-1"></i> 讚 (${likeCount})`;
+                }
+            });
+        });
+        
+        // 載入更多按鈕功能
+        const loadMoreBtn = document.getElementById('load-more-btn');
+        if (loadMoreBtn) {
+            loadMoreBtn.addEventListener('click', function() {
+                // 模擬載入中
+                this.disabled = true;
+                this.innerHTML = '⏳ 載入中...';
+                
+                // 這裡應該有 AJAX 請求更多貼文的功能
+                setTimeout(() => {
+                    // 模擬載入完成
+                    this.disabled = false;
+                    this.innerHTML = '🔄 載入更多';
+                    // 顯示沒有更多貼文的提示
+                    this.insertAdjacentHTML('afterend', '<p class="text-center text-muted mt-3">沒有更多貼文了</p>');
+                    this.style.display = 'none';
+                }, 1500);
+            });
+        }
+
+        // 切換到追蹤標籤時加載數據
+        const followingTab = document.getElementById('following-tab');
+        let followingPostsLoaded = false;
+        
+        followingTab.addEventListener('click', function() {
+            if (!followingPostsLoaded) {
+                // 首次切換到追蹤標籤時加載數據
+                loadFollowingPosts();
+                followingPostsLoaded = true;
+            }
+        });
+        
+        function loadFollowingPosts() {
+            const container = document.getElementById('following-posts-container');
+            const loadingEl = document.getElementById('following-loading');
+            
+            // 發送AJAX請求獲取追蹤中的貼文
+            fetch('/api/following-posts')
+                .then(response => response.json())
+                .then(data => {
+                    // 隱藏載入中提示
+                    loadingEl.style.display = 'none';
+                    
+                    if (data.posts && data.posts.length > 0) {
+                        // 顯示追蹤的貼文
+                        let postsHTML = '';
+                        data.posts.forEach(post => {
+                            postsHTML += `
+                            <div class="social-post-card">
+                                <div class="post-header d-flex align-items-center">
+                                    <img src="${post.user_avatar || '/static/images/default-avatar.png'}" alt="${post.user_name}" class="social-avatar me-2">
+                                    <div>
+                                        <h6 class="mb-0">${post.user_name}</h6>
+                                        <small class="text-muted">${post.time_ago}</small>
+                                    </div>
+                                </div>
+                                <div class="post-content my-2">
+                                    <p>${post.content}</p>
+                                    ${post.image_url ? `<img src="${post.image_url}" alt="貼文圖片" class="img-fluid rounded">` : ''}
+                                </div>
+                                <div class="post-actions d-flex justify-content-between">
+                                    <button class="btn btn-sm btn-light post-like-btn ${post.user_liked ? 'text-danger' : ''}" data-post-id="${post.id}">
+                                        ${post.user_liked ? '❤️' : '🤍'} ${post.likes_count || 0}
+                                    </button>
+                                    <button class="btn btn-sm btn-light">
+                                        💬 ${post.comments_count || 0}
+                                    </button>
+                                    <button class="btn btn-sm btn-light">
+                                        🔄
+                                    </button>
+                                </div>
+                            </div>`;
+                        });
+                        container.innerHTML = postsHTML;
+                        
+                        // 添加載入更多按鈕
+                        container.innerHTML += `
+                        <button class="btn btn-outline-primary w-100 mt-3" id="load-more-following">
+                            🔄 載入更多
+                        </button>`;
+                    } else {
+                        // 沒有追蹤的貼文
+                        container.innerHTML = `
+                        <div class="text-center p-4">
+                            <p class="mb-0 text-muted">沒有追蹤中的貼文</p>
+                            <a href="/explore" class="btn btn-primary mt-3">發現用戶</a>
+                        </div>`;
+                    }
+                    
+                    // 為新載入的點讚按鈕添加事件監聽
+                    document.querySelectorAll('.post-like-btn').forEach(btn => {
+                        btn.addEventListener('click', handleLikeClick);
+                    });
+                })
+                .catch(error => {
+                    console.error('載入追蹤貼文失敗:', error);
+                    loadingEl.style.display = 'none';
+                    container.innerHTML = `
+                    <div class="text-center p-4">
+                        <p class="text-danger mb-0">載入失敗，請稍後再試</p>
+                    </div>`;
+                });
+        }
+        
+        // 處理點讚按鈕點擊事件
+        function handleLikeClick(e) {
+            const btn = e.currentTarget;
+            const postId = btn.dataset.postId;
+            
+            fetch(`/like-post/${postId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 更新按鈕狀態
+                    if (data.liked) {
+                        btn.classList.add('text-danger');
+                        btn.innerHTML = btn.innerHTML.replace('🤍', '❤️');
+                    } else {
+                        btn.classList.remove('text-danger');
+                        btn.innerHTML = btn.innerHTML.replace('❤️', '🤍');
+                    }
+                    
+                    // 更新點讚數
+                    const likesCount = parseInt(btn.innerHTML.match(/\d+/)[0]);
+                    btn.innerHTML = btn.innerHTML.replace(/\d+/, data.liked ? likesCount + 1 : likesCount - 1);
+                }
+            })
+            .catch(error => console.error('點讚操作失敗:', error));
+        }
+    });
+</script>
 {% endblock %} 

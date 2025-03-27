@@ -1,39 +1,224 @@
 {% extends "base.html" %}
 
-{% block title %}關於我 - 顧晉瑋的網站{% endblock %}
+{% block title %}關於我 - CineSocial{% endblock %}
+
+{% block extra_css %}
+<!-- 確保 Font Awesome 圖標庫正確載入 -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+{% endblock %}
 
 {% block content %}
-<div class="card">
-    <div class="card-header bg-primary text-white">
-        <h2>顧晉瑋簡介</h2>
+<!-- 頁面標題 -->
+<div class="social-card mb-4">
+    <div class="card-body text-center py-4" style="background: linear-gradient(to right, #6a11cb, #2575fc); color: white; border-radius: 0.5rem;">
+        <h2 class="display-5 fw-bold">關於我</h2>
+        <p class="lead mb-0">歡迎來到我的個人空間</p>
     </div>
+</div>
+
+<!-- 個人資料卡片 -->
+<div class="social-card mb-4">
     <div class="card-body">
         <div class="row">
-            <div class="col-md-4 text-center mb-3">
-                <img src="{{ url_for('static', filename='images/profile.jpg') }}" class="img-fluid rounded-circle" alt="顧晉瑋照片" style="max-width: 200px;">
+            <!-- 左側個人照片區 -->
+            <div class="col-lg-4 text-center mb-4 mb-lg-0">
+                <div class="position-relative">
+                    <img src="{{ url_for('static', filename='images/profile.jpg') }}" alt="顧晉瑋" 
+                         class="rounded-circle img-thumbnail shadow" 
+                         style="width: 200px; height: 200px; object-fit: cover; border: 5px solid white;">
+                    <div class="position-absolute bottom-0 end-0">
+                        <span class="badge rounded-pill text-bg-primary p-2">
+                            ✓ 已認證
+                        </span>
+                    </div>
+                </div>
+                <h2 class="mt-4 mb-1">顧晉瑋</h2>
+                <p class="text-muted">網站開發者 | 電影愛好者</p>
+                <div class="d-flex justify-content-center gap-3 mt-3">
+                    <a href="#" class="btn btn-sm btn-outline-primary rounded-circle">
+                        FB
+                    </a>
+                    <a href="#" class="btn btn-sm btn-outline-info rounded-circle">
+                        TW
+                    </a>
+                    <a href="https://www.instagram.com/miiduoa?igsh=MWM1eDJzOXpuNWdyOA%3D%3D&utm_source=qr" target="_blank" class="btn btn-sm btn-outline-danger rounded-circle">
+                        IG
+                    </a>
+                    <a href="#" class="btn btn-sm btn-outline-dark rounded-circle">
+                        GH
+                    </a>
+                </div>
             </div>
-            <div class="col-md-8">
-                <h3>個人資料</h3>
-                <ul class="list-group list-group-flush mb-3">
-                    <li class="list-group-item"><strong>姓名：</strong>顧晉瑋</li>
-                    <li class="list-group-item"><strong>學校：</strong>靜宜大學</li>
-                    <li class="list-group-item"><strong>學號：</strong>411211325</li>
-                    <li class="list-group-item"><strong>系所：</strong>資訊管理學系</li>
-                    <li class="list-group-item"><strong>興趣：</strong>網頁設計、程式開發</li>
-                </ul>
-                
-                <h3>專業技能</h3>
-                <div class="mb-3">
-                    <span class="badge bg-primary">HTML/CSS</span>
-                    <span class="badge bg-primary">JavaScript</span>
-                    <span class="badge bg-primary">Python</span>
-                    <span class="badge bg-primary">Flask</span>
-                    <span class="badge bg-primary">Bootstrap</span>
-                    <span class="badge bg-primary">Firebase</span>
+            
+            <!-- 右側個人介紹區 -->
+            <div class="col-lg-8">
+                <!-- 個人簡介部分 -->
+                <div class="mb-4">
+                    <h4 class="border-bottom pb-2">
+                        👤 個人簡介
+                    </h4>
+                    <p class="lead">熱愛電影與科技的全端開發者</p>
+                    <p>我是顧晉瑋，一位充滿熱情的網站開發者和電影愛好者。擁有多年的開發經驗，專注於創建美觀且實用的網站和應用程序。</p>
+                    <p>我創建這個網站是為了分享我對電影的熱愛，並與其他電影愛好者交流。希望透過這個平台，能夠連接更多志同道合的朋友。</p>
                 </div>
                 
-                <h3>自我介紹</h3>
-                <p>這裡是關於您的詳細介紹。您可以描述自己的學習經歷、專業興趣、未來目標等內容。</p>
+                <!-- 專業技能部分 -->
+                <div class="mb-4">
+                    <h4 class="border-bottom pb-2">
+                        💻 專業技能
+                    </h4>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span>HTML/CSS</span>
+                                    <span>95%</span>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-primary" role="progressbar" style="width: 95%"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span>JavaScript</span>
+                                    <span>90%</span>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-info" role="progressbar" style="width: 90%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span>Python/Flask</span>
+                                    <span>92%</span>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: 92%"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <span>Firebase</span>
+                                    <span>88%</span>
+                                </div>
+                                <div class="progress" style="height: 8px;">
+                                    <div class="progress-bar bg-warning" role="progressbar" style="width: 88%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 愛好部分 -->
+                <div class="mb-4">
+                    <h4 class="border-bottom pb-2">
+                        ❤️ 興趣愛好
+                    </h4>
+                    <div class="row">
+                        <div class="col-md-4 text-center mb-3">
+                            <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                                🎬
+                            </div>
+                            <h5 class="mt-2">電影欣賞</h5>
+                        </div>
+                        <div class="col-md-4 text-center mb-3">
+                            <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                                💻
+                            </div>
+                            <h5 class="mt-2">程式開發</h5>
+                        </div>
+                        <div class="col-md-4 text-center mb-3">
+                            <div class="rounded-circle bg-light d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                                📚
+                            </div>
+                            <h5 class="mt-2">閱讀</h5>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 聯絡方式 -->
+<div class="social-card mb-4">
+    <div class="card-header bg-light">
+        <h5 class="mb-0">📝 聯絡方式</h5>
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-6">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                        ✉️
+                    </div>
+                    <div>
+                        <h6 class="mb-0">電子郵件</h6>
+                        <p class="mb-0 text-muted">example@email.com</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                        🌐
+                    </div>
+                    <div>
+                        <h6 class="mb-0">個人網站</h6>
+                        <p class="mb-0 text-muted">www.example.com</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                        📍
+                    </div>
+                    <div>
+                        <h6 class="mb-0">地點</h6>
+                        <p class="mb-0 text-muted">台灣台北</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="d-flex align-items-center">
+                    <div class="rounded-circle bg-light d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+                        📅
+                    </div>
+                    <div>
+                        <h6 class="mb-0">現在時間</h6>
+                        <p class="mb-0 text-muted">{{ now|default('現在時間') }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 關於本站 -->
+<div class="social-card mb-4">
+    <div class="card-header bg-light">
+        <h5 class="mb-0">ℹ️ 關於本站</h5>
+    </div>
+    <div class="card-body">
+        <p>CineSocial 是一個專為電影愛好者設計的社交平台，希望能為用戶提供分享電影心得、討論電影內容的空間。</p>
+        <p class="mb-0">本網站於2023年創建，不斷更新與改進，為用戶提供更好的體驗。</p>
+    </div>
+    <div class="card-footer text-center">
+        <div class="row">
+            <div class="col-4">
+                <h4 class="mb-0">50+</h4>
+                <small class="text-muted">電影收藏</small>
+            </div>
+            <div class="col-4">
+                <h4 class="mb-0">100+</h4>
+                <small class="text-muted">用戶互動</small>
+            </div>
+            <div class="col-4">
+                <h4 class="mb-0">5+</h4>
+                <small class="text-muted">推薦系統</small>
             </div>
         </div>
     </div>

@@ -1,0 +1,301 @@
+:root {
+    --cinesocial-primary: #5C2D91;    /* 獨特的主色調 */
+    --cinesocial-secondary: #0078D7;  /* 獨特的次色調 */
+    --cinesocial-bg: #121212;         /* 深色背景 */
+    --cinesocial-card: #1E1E1E;       /* 卡片背景 */
+    --cinesocial-text: #FFFFFF;       /* 主要文字 */
+    --cinesocial-text-secondary: #BBBBBB; /* 次要文字 */
+    --cinesocial-border: #333333;     /* 邊框顏色 */
+    --cinesocial-accent: #E91E63;     /* 強調色 */
+}
+
+body.cinesocial-body {
+    background-color: var(--cinesocial-bg);
+    color: var(--cinesocial-text);
+    font-family: 'Noto Sans TC', sans-serif;
+    padding-top: 56px;
+}
+
+/* 導航欄樣式 */
+.cinesocial-navbar {
+    background-color: var(--cinesocial-primary);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 布局容器 */
+.cinesocial-container {
+    display: flex;
+    min-height: calc(100vh - 56px);
+}
+
+/* 側邊欄樣式 */
+.cinesocial-sidebar {
+    width: 220px;
+    background-color: var(--cinesocial-bg);
+    border-right: 1px solid var(--cinesocial-border);
+    position: fixed;
+    top: 56px;
+    bottom: 0;
+    padding: 20px 0;
+    overflow-y: auto;
+}
+
+.cinesocial-sidebar .nav-link {
+    color: var(--cinesocial-text);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    transition: all 0.2s ease;
+}
+
+.cinesocial-sidebar .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.05);
+}
+
+.cinesocial-sidebar .nav-link i {
+    font-size: 20px;
+    margin-right: 15px;
+    width: 25px;
+    text-align: center;
+}
+
+/* 主內容區域 */
+.cinesocial-content {
+    flex: 1;
+    margin-left: 220px;
+    padding: 20px;
+    max-width: 700px;
+}
+
+/* 右側資訊欄 */
+.cinesocial-rightbar {
+    width: 300px;
+    padding: 20px;
+    position: fixed;
+    right: 0;
+    top: 56px;
+    bottom: 0;
+    overflow-y: auto;
+    display: none;
+}
+
+/* 中等屏幕及以上顯示右側欄 */
+@media (min-width: 1200px) {
+    .cinesocial-content {
+        margin-right: 300px;
+    }
+    .cinesocial-rightbar {
+        display: block;
+    }
+}
+
+/* 卡片樣式 */
+.cinesocial-card {
+    background-color: var(--cinesocial-card);
+    border: 1px solid var(--cinesocial-border);
+    border-radius: 8px;
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.cinesocial-card-header {
+    padding: 12px 15px;
+    border-bottom: 1px solid var(--cinesocial-border);
+    display: flex;
+    align-items: center;
+}
+
+.cinesocial-card-body {
+    padding: 15px;
+}
+
+.cinesocial-card-footer {
+    padding: 12px 15px;
+    border-top: 1px solid var(--cinesocial-border);
+}
+
+/* 用戶頭像 */
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.avatar-small {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.mini-poster {
+    width: 40px;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+}
+
+/* 按鈕樣式 */
+.btn-cinesocial {
+    background-color: var(--cinesocial-primary);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 8px 20px;
+    font-weight: 500;
+}
+
+.btn-cinesocial:hover {
+    background-color: var(--cinesocial-secondary);
+    color: white;
+}
+
+/* 搜索框樣式 */
+.cinesocial-search {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.cinesocial-search::placeholder {
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.cinesocial-search:focus {
+    background-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    border-color: var(--cinesocial-accent);
+}
+
+/* 底部區域 */
+.cinesocial-footer {
+    background-color: var(--cinesocial-primary);
+    color: rgba(255, 255, 255, 0.7);
+    padding: 20px 0;
+}
+
+.cinesocial-footer a {
+    color: white;
+    text-decoration: none;
+}
+
+.cinesocial-footer a:hover {
+    text-decoration: underline;
+}
+
+/* 貼文樣式 */
+.post-card {
+    border-radius: 10px;
+    overflow: hidden;
+    transition: transform 0.2s;
+}
+
+.post-card:hover {
+    transform: translateY(-2px);
+}
+
+.post-header {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+}
+
+.post-header .avatar {
+    margin-right: 12px;
+}
+
+.post-content {
+    padding: 0 15px 15px;
+}
+
+.post-image {
+    width: 100%;
+    max-height: 400px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.post-footer {
+    padding: 10px 15px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.post-actions button {
+    color: var(--cinesocial-text-secondary);
+    background: none;
+    border: none;
+    padding: 5px 10px;
+    transition: all 0.2s ease;
+}
+
+.post-actions button:hover {
+    color: var(--cinesocial-accent);
+}
+
+/* 響應式調整 */
+@media (max-width: 992px) {
+    .cinesocial-sidebar {
+        width: 70px;
+    }
+    
+    .cinesocial-sidebar .nav-link span {
+        display: none;
+    }
+    
+    .cinesocial-sidebar .nav-link i {
+        margin-right: 0;
+    }
+    
+    .cinesocial-content {
+        margin-left: 70px;
+    }
+}
+
+@media (max-width: 768px) {
+    .cinesocial-sidebar {
+        width: 100%;
+        height: 60px;
+        bottom: 0;
+        top: auto;
+        border-right: none;
+        border-top: 1px solid var(--cinesocial-border);
+        padding: 0;
+        display: flex;
+        z-index: 1030;
+    }
+    
+    .cinesocial-sidebar ul {
+        display: flex;
+        width: 100%;
+        margin: 0;
+    }
+    
+    .cinesocial-sidebar .nav-item {
+        flex: 1;
+    }
+    
+    .cinesocial-sidebar .nav-link {
+        padding: 10px 0;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .cinesocial-sidebar .nav-link i {
+        margin: 0 0 5px 0;
+        font-size: 16px;
+    }
+    
+    .cinesocial-sidebar .nav-link span {
+        display: block;
+        font-size: 10px;
+    }
+    
+    .cinesocial-content {
+        margin-left: 0;
+        margin-bottom: 60px;
+        padding: 15px;
+    }
+} 

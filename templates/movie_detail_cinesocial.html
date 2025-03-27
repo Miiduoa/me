@@ -1,0 +1,285 @@
+{% extends "base_cinesocial.html" %}
+
+{% block title %}{{ movie.title }} - CineSocial{% endblock %}
+
+{% block content %}
+<div class="cinesocial-card mb-4">
+    <div class="cinesocial-card-body">
+        <div class="row">
+            <div class="col-md-4">
+                {% if movie.image_url %}
+                <img src="{{ movie.image_url }}" class="img-fluid rounded" alt="{{ movie.title }}">
+                {% else %}
+                <div class="bg-secondary text-white d-flex align-items-center justify-content-center rounded" style="height: 400px;">
+                    <i class="fas fa-film fa-5x"></i>
+                </div>
+                {% endif %}
+            </div>
+            <div class="col-md-8">
+                <h1 class="mb-3">{{ movie.title }}</h1>
+                
+                <div class="d-flex align-items-center mb-3">
+                    <div class="me-3">
+                        <span class="badge bg-primary">{{ movie.rating|default('--') }}</span>
+                        <small class="text-muted ms-1">評分</small>
+                    </div>
+                    <div class="me-3">
+                        <i class="far fa-calendar-alt me-1"></i>
+                        <span>{{ movie.date|default('未知') }}</span>
+                    </div>
+                    <div>
+                        <i class="far fa-heart me-1"></i>
+                        <span id="like-count">{{ movie.likes_count|default(0) }}</span>
+                    </div>
+                </div>
+                
+                <p class="lead">{{ movie.description }}</p>
+                
+                <div class="mb-3">
+                    {% for genre in movie.genre %}
+                    <span class="badge bg-secondary me-2">{{ genre }}</span>
+                    {% endfor %}
+                </div>
+                
+                <button class="btn btn-cinesocial me-2 like-button {% if movie.user_liked %}liked{% endif %}" 
+                        data-movie-id="{{ movie.id }}">
+                    <i class="{% if movie.user_liked %}fas{% else %}far{% endif %} fa-heart me-1"></i>
+                    {% if movie.user_liked %}已喜歡{% else %}喜歡{% endif %}
+                </button>
+                
+                <button class="btn btn-outline-light" 
+                        data-bs-toggle="modal" 
+                        data-bs-target="#shareModal">
+                    <i class="fas fa-share-alt me-1"></i> 分享
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 評論區 -->
+<div class="cinesocial-card">
+    <div class="cinesocial-card-header">
+        <h4>評論 ({{ comments|length }})</h4>
+    </div>
+    <div class="cinesocial-card-body">
+        {% if 'user_id' in session %}
+        <form id="comment-form" class="mb-4">
+            <div class="mb-3">
+                <textarea id="comment-text" class="form-control bg-transparent text-light" rows="3" placeholder="寫下你的評論..."></textarea>
+            </div>
+            <button type="submit" class="btn btn-cinesocial">發表評論</button>
+        </form>
+        {% else %}
+        <div class="alert alert-secondary">
+            <a href="{{ url_for('auth.login') }}" class="alert-link">登入</a> 後才能發表評論
+        </div>
+        {% endif %}
+        
+        <div id="comments-container">
+            {% for comment in comments %}
+            <div class="d-flex mb-3 comment">
+                <img src="{{ comment.user_avatar|default('/static/images/default-avatar.png') }}" class="avatar-small me-3" alt="{{ comment.user_name }}">
+                <div class="flex-grow-1">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <h6 class="mb-0">{{ comment.user_name }}</h6>
+                        <small class="text-muted">{{ comment.time_ago }}</small>
+                    </div>
+                    <p class="mb-1">{{ comment.text }}</p>
+                    <div class="d-flex">
+                        <button class="btn btn-sm text-secondary me-2">
+                            <i class="far fa-heart me-1"></i> 喜歡
+                        </button>
+                        <button class="btn btn-sm text-secondary me-2">
+                            <i class="far fa-comment me-1"></i> 回覆
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            
+            {% if not comments %}
+            <div class="text-center py-3">
+                <p class="text-muted">還沒有評論，成為第一個留言的人吧！</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- 相關電影 -->
+<div class="cinesocial-card mt-4">
+    <div class="cinesocial-card-header">
+        <h4>相關電影</h4>
+    </div>
+    <div class="cinesocial-card-body">
+        <div class="row">
+            {% for related_movie in related_movies %}
+            <div class="col-lg-3 col-md-4 col-sm-6 mb-4">
+                <div class="card h-100 bg-transparent border-0">
+                    <a href="{{ url_for('movie_detail', movie_id=related_movie.id) }}">
+                        <img src="{{ related_movie.image_url|default('/static/images/movie-placeholder.jpg') }}" 
+                             class="card-img-top rounded" alt="{{ related_movie.title }}">
+                    </a>
+                    <div class="card-body px-0">
+                        <h6 class="card-title">
+                            <a href="{{ url_for('movie_detail', movie_id=related_movie.id) }}" class="text-decoration-none">
+                                {{ related_movie.title }}
+                            </a>
+                        </h6>
+                        <p class="card-text small text-muted">{{ related_movie.date }}</p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<!-- 分享彈窗 -->
+<div class="modal fade" id="shareModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content bg-dark text-light border-secondary">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title">分享電影</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>分享 "{{ movie.title }}" 到：</p>
+                <div class="d-flex justify-content-between">
+                    <button class="btn btn-outline-primary">
+                        <i class="fab fa-facebook fa-lg"></i>
+                    </button>
+                    <button class="btn btn-outline-info">
+                        <i class="fab fa-twitter fa-lg"></i>
+                    </button>
+                    <button class="btn btn-outline-success">
+                        <i class="fab fa-line fa-lg"></i>
+                    </button>
+                    <button class="btn btn-outline-danger">
+                        <i class="fas fa-envelope fa-lg"></i>
+                    </button>
+                </div>
+                <div class="mt-3">
+                    <label class="form-label">分享連結</label>
+                    <div class="input-group">
+                        <input type="text" class="form-control bg-dark text-light" readonly 
+                               value="{{ request.url }}">
+                        <button class="btn btn-outline-light" type="button" id="copy-link">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 點讚功能
+    const likeButton = document.querySelector('.like-button');
+    if (likeButton) {
+        likeButton.addEventListener('click', function() {
+            const movieId = this.dataset.movieId;
+            
+            // 假設用戶已登入
+            {% if 'user_id' in session %}
+            
+            fetch('/like-movie', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    movie_id: movieId
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const icon = this.querySelector('i');
+                    if (data.action === 'added') {
+                        icon.classList.replace('far', 'fas');
+                        this.classList.add('liked');
+                        this.innerHTML = `<i class="fas fa-heart me-1"></i> 已喜歡`;
+                    } else {
+                        icon.classList.replace('fas', 'far');
+                        this.classList.remove('liked');
+                        this.innerHTML = `<i class="far fa-heart me-1"></i> 喜歡`;
+                    }
+                    
+                    // 更新喜歡計數
+                    const likeCount = document.getElementById('like-count');
+                    if (likeCount) {
+                        likeCount.textContent = data.count;
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+            
+            {% else %}
+            
+            // 未登入跳轉到登入頁
+            window.location.href = "{{ url_for('auth.login') }}";
+            
+            {% endif %}
+        });
+    }
+    
+    // 複製連結功能
+    const copyButton = document.getElementById('copy-link');
+    if (copyButton) {
+        copyButton.addEventListener('click', function() {
+            const input = this.parentNode.querySelector('input');
+            input.select();
+            document.execCommand('copy');
+            
+            // 顯示複製成功的提示
+            this.innerHTML = '<i class="fas fa-check"></i>';
+            setTimeout(() => {
+                this.innerHTML = '<i class="fas fa-copy"></i>';
+            }, 2000);
+        });
+    }
+    
+    // 評論功能
+    const commentForm = document.getElementById('comment-form');
+    if (commentForm) {
+        commentForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const commentText = document.getElementById('comment-text').value;
+            if (!commentText.trim()) {
+                return;
+            }
+            
+            fetch('/add-comment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    movie_id: '{{ movie.id }}',
+                    text: commentText
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // 重新載入評論
+                    location.reload();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    }
+});
+</script>
+{% endblock %} 

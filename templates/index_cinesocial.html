@@ -1,0 +1,94 @@
+{% extends "base_cinesocial.html" %}
+
+{% block title %}CineSocial - 顧晉瑋的網站{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <!-- 發布貼文卡片 -->
+        {% if 'user_id' in session %}
+        <div class="cinesocial-card mb-4">
+            <div class="cinesocial-card-body">
+                <div class="d-flex">
+                    <img src="{{ user.avatar_url|default('/static/images/default-avatar.png') }}" alt="{{ user.display_name }}" class="avatar me-3">
+                    <div class="flex-grow-1">
+                        <form action="/create-post" method="POST" enctype="multipart/form-data">
+                            <textarea class="form-control bg-transparent text-light mb-3" name="content" rows="3" placeholder="分享你的想法..."></textarea>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <button type="button" class="btn btn-sm btn-outline-light me-2">
+                                        <i class="fas fa-image me-1"></i> 照片
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-outline-light">
+                                        <i class="fas fa-film me-1"></i> 電影
+                                    </button>
+                                </div>
+                                <button type="submit" class="btn btn-cinesocial">發布</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- 貼文流 -->
+        {% for post in posts %}
+        <div class="cinesocial-card post-card">
+            <div class="post-header">
+                <img src="{{ post.user_avatar|default('/static/images/default-avatar.png') }}" alt="{{ post.user_name }}" class="avatar">
+                <div>
+                    <div class="fw-bold">{{ post.user_name }}</div>
+                    <div class="small text-muted">{{ post.time_ago }}</div>
+                </div>
+            </div>
+            
+            <div class="post-content">
+                <p>{{ post.text }}</p>
+                {% if post.image_url %}
+                <img src="{{ post.image_url }}" alt="Post image" class="post-image mb-3">
+                {% endif %}
+                
+                {% if post.movie_id %}
+                <div class="movie-reference d-flex align-items-center p-2 rounded mb-3" style="background-color: rgba(255,255,255,0.05);">
+                    {% if post.movie_poster %}
+                    <img src="{{ post.movie_poster }}" alt="{{ post.movie_title }}" class="mini-poster me-2">
+                    {% else %}
+                    <div class="mini-poster me-2 bg-secondary d-flex align-items-center justify-content-center">
+                        <i class="fas fa-film"></i>
+                    </div>
+                    {% endif %}
+                    <div>
+                        <a href="{{ url_for('movie_detail', movie_id=post.movie_id) }}" class="text-decoration-none">{{ post.movie_title }}</a>
+                        <div class="small text-muted">相關電影</div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="post-footer">
+                <div class="post-actions">
+                    <button type="button" class="me-3">
+                        <i class="far fa-heart me-1"></i> {{ post.likes_count|default(0) }}
+                    </button>
+                    <button type="button" class="me-3">
+                        <i class="far fa-comment me-1"></i> {{ post.comments_count|default(0) }}
+                    </button>
+                    <button type="button">
+                        <i class="far fa-share-square"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        
+        {% if not posts %}
+        <div class="text-center py-5">
+            <i class="fas fa-film fa-3x mb-3 text-muted"></i>
+            <h4>還沒有任何貼文</h4>
+            <p class="text-muted">成為第一個分享的人！</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %} 

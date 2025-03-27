@@ -2,104 +2,70 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, shrink-to-fit=no">
-    <title>{% block title %}顧晉瑋的網站{% endblock %}</title>
-    <!-- 引入字體 -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}顧晉瑋的社群網站{% endblock %}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
-    <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Font Awesome 圖標 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <!-- 自定義 CSS -->
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    <!-- SEO元標籤 -->
-    <meta name="description" content="顧晉瑋的個人網站，提供最新電影資訊與個人作品展示">
-    <meta name="keywords" content="顧晉瑋, 網站開發, 電影資訊, Flask, Firebase">
-    <meta name="author" content="顧晉瑋">
-    <link rel="canonical" href="{{ request.url }}">
-    <!-- Firebase Performance Monitoring -->
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-performance.js"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/social.css') }}">
     {% block extra_css %}{% endblock %}
 </head>
-<body>
-    <!-- 改進的導航欄 -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark sticky-top shadow-sm">
-        <div class="container">
-            <a class="navbar-brand d-flex align-items-center" href="/">
-                <i class="fas fa-film me-2"></i>
-                <span>顧晉瑋的網站</span>
+<body class="social-body">
+    <!-- 頂部導航 -->
+    <nav class="navbar navbar-expand-lg navbar-dark social-navbar fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-film me-2"></i>CineSocial
             </a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse" id="navbarNav">
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <form class="d-flex mx-auto social-search-form">
+                    <div class="input-group">
+                        <input class="form-control bg-light border-0" type="search" placeholder="搜尋...">
+                        <button class="btn btn-light" type="submit"><i class="fas fa-search"></i></button>
+                    </div>
+                </form>
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
-                        <a class="nav-link {{ 'active' if request.path == '/' }}" href="/"><i class="fas fa-home me-1"></i> 首頁</a>
+                        <a class="nav-link {{ 'active' if request.path == '/' }}" href="/">
+                            🏠
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ 'active' if request.path == '/today' }}" href="/today"><i class="fas fa-calendar-day me-1"></i> 現在時間</a>
+                        <a class="nav-link {% if request.path == '/explore' %}active{% endif %}" href="/explore">
+                            🔍 探索
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {{ 'active' if request.path == '/about' }}" href="/about"><i class="fas fa-user me-1"></i> 關於我</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link {{ 'active' if request.path.startswith('/movies') }}" href="{{ url_for('movies') }}"><i class="fas fa-film me-1"></i> 最新電影</a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-palette me-1"></i> 介面風格
+                        <a class="nav-link {{ 'active' if request.path == '/notifications' }}" href="/notifications">
+                            🔔
+                            {% if notification_count and notification_count > 0 %}
+                            <span class="badge bg-danger rounded-pill">{{ notification_count }}</span>
+                            {% endif %}
                         </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{{ url_for('set_style', style='traditional') }}">傳統風格</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('set_style', style='social') }}">社交風格</a></li>
-                            <li><a class="dropdown-item" href="{{ url_for('set_style', style='threads') }}">Threads風格</a></li>
-                        </ul>
                     </li>
-                    {% if session.get('user_id') %}
+                    {% if 'user_id' in session %}
                     <li class="nav-item dropdown">
-                        <a class="nav-link position-relative" href="#" id="notificationsDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-bell"></i>
-                            <span id="notification-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger" style="display: none;">0</span>
+                        <a class="nav-link" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown">
+                            <img src="{{ user.avatar_url|default('/static/images/default-avatar.png') }}" alt="{{ session.get('user_name') }}" class="social-avatar-small">
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="notificationsDropdown" id="notifications-container">
-                            <li><div class="dropdown-item text-center">載入通知中...</div></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-user-circle me-1"></i> {{ session.get('user_name') }}
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end shadow-sm" aria-labelledby="navbarDropdown">
-                            <li><a class="dropdown-item" href="/profile"><i class="fas fa-id-card me-1"></i> 個人資料</a></li>
+                        <ul class="dropdown-menu dropdown-menu-end social-dropdown-menu">
+                            <li><a class="dropdown-item" href="/profile"><i class="fas fa-user me-2"></i>個人資料</a></li>
+                            <li><a class="dropdown-item" href="/settings"><i class="fas fa-cog me-2"></i>設定</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="/logout"><i class="fas fa-sign-out-alt me-1"></i> 登出</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="languageDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-globe me-1"></i> 語言
-                        </a>
-                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="languageDropdown">
-                            <li>
-                                <form action="{{ url_for('set_language') }}" method="post" id="zh-tw-form">
-                                    <input type="hidden" name="language" value="zh-TW">
-                                    <button type="submit" class="dropdown-item">繁體中文</button>
-                                </form>
-                            </li>
-                            <li>
-                                <form action="{{ url_for('set_language') }}" method="post" id="en-form">
-                                    <input type="hidden" name="language" value="en">
-                                    <button type="submit" class="dropdown-item">English</button>
-                                </form>
-                            </li>
+                            <li><a class="dropdown-item" href="/logout"><i class="fas fa-sign-out-alt me-2"></i>登出</a></li>
                         </ul>
                     </li>
                     {% else %}
                     <li class="nav-item">
-                        <a class="nav-link {{ 'active' if request.path == '/login' }}" href="/login"><i class="fas fa-sign-in-alt me-1"></i> 登入</a>
+                        <a href="/login" class="nav-link">登入</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/register" class="btn btn-primary btn-sm rounded-pill px-3">註冊</a>
                     </li>
                     {% endif %}
                 </ul>
@@ -107,108 +73,161 @@
         </div>
     </nav>
 
-    <!-- 主要內容區域 -->
-    <main class="container py-4">
-        {% block content %}{% endblock %}
-    </main>
-
-    <!-- 改進的頁腳 -->
-    <footer class="bg-dark text-white py-4 mt-5">
-        <div class="container">
-            <div class="row">
-                <div class="col-md-6 mb-3 mb-md-0">
-                    <h5><i class="fas fa-film me-2"></i> 顧晉瑋的網站</h5>
-                    <p class="small">一個展示最新電影資訊的個人網站，使用Flask和Firebase開發。</p>
-                </div>
-                <div class="col-md-3 mb-3 mb-md-0">
-                    <h5>快速連結</h5>
-                    <ul class="list-unstyled">
-                        <li><a href="/" class="text-white text-decoration-none"><i class="fas fa-chevron-right me-1"></i> 首頁</a></li>
-                        <li><a href="/movies" class="text-white text-decoration-none"><i class="fas fa-chevron-right me-1"></i> 電影</a></li>
-                        <li><a href="/about" class="text-white text-decoration-none"><i class="fas fa-chevron-right me-1"></i> 關於我</a></li>
-                    </ul>
-                </div>
-                <div class="col-md-3">
-                    <h5>聯絡資訊</h5>
-                    <ul class="list-unstyled">
-                        <li><i class="fas fa-envelope me-1"></i> info@example.com</li>
-                        <li><i class="fas fa-phone me-1"></i> (02) 1234-5678</li>
-                    </ul>
+    <!-- 主要內容區 -->
+    <div class="container-fluid">
+        <div class="row">
+            <!-- 左側邊欄 -->
+            <div class="col-lg-3 d-none d-lg-block social-sidebar left-sidebar">
+                <div class="list-group">
+                    <a href="/" class="list-group-item list-group-item-action {{ 'active' if request.path == '/' }}">
+                        🏠 首頁
+                    </a>
+                    <a href="/explore" class="list-group-item list-group-item-action {{ 'active' if request.path == '/explore' }}">
+                        🧭 探索
+                    </a>
+                    <a href="/movies" class="list-group-item list-group-item-action {{ 'active' if '/movies' in request.path }}">
+                        🎬 電影
+                    </a>
+                    <a href="/about" class="list-group-item list-group-item-action {{ 'active' if request.path == '/about' }}">
+                        👤 關於我
+                    </a>
+                    {% if 'user_id' in session %}
+                    <a href="/notifications" class="list-group-item list-group-item-action {{ 'active' if request.path == '/notifications' }}">
+                        🔔 通知
+                        {% if notification_count and notification_count > 0 %}
+                        <span class="badge bg-danger rounded-pill float-end">{{ notification_count }}</span>
+                        {% endif %}
+                    </a>
+                    <a href="/profile" class="list-group-item list-group-item-action {{ 'active' if request.path == '/profile' }}">
+                        👤 個人資料
+                    </a>
+                    {% endif %}
                 </div>
             </div>
-            <hr class="my-3">
-            <div class="text-center">
-                <p class="mb-0">© 2023 顧晉瑋. 資訊管理課程專案.</p>
+
+            <!-- 中央內容區 -->
+            <div class="col-lg-6 col-md-8 social-content">
+                {% block content %}{% endblock %}
+            </div>
+
+            <!-- 右側邊欄 -->
+            <div class="col-lg-3 col-md-4 d-none d-md-block social-sidebar right-sidebar">
+                <!-- 最新電影區塊 -->
+                {% if trending_movies is defined %}
+                <div class="card social-card mb-4">
+                    <div class="card-header">
+                        <h6 class="mb-0">熱門電影</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="list-group list-group-flush">
+                            {% for movie in trending_movies[:3] %}
+                            <li class="list-group-item">
+                                <a href="/movie/{{ movie.id }}" class="text-decoration-none">
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0">
+                                            {% if movie.image_url %}
+                                            <img src="{{ movie.image_url }}" alt="{{ movie.title }}" class="social-movie-thumbnail">
+                                            {% else %}
+                                            <div class="social-movie-thumbnail d-flex align-items-center justify-content-center bg-secondary">
+                                                <i class="fas fa-film"></i>
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        <div class="ms-3">
+                                            <h6 class="mb-0">{{ movie.title }}</h6>
+                                            <p class="mb-0 small text-muted">{{ movie.rating|default('暫無評分') }}</p>
+                                        </div>
+                                    </div>
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <div class="card-footer">
+                        <a href="/movies" class="btn btn-sm btn-outline-primary w-100">查看全部電影</a>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- 推薦關注區塊 -->
+                <div class="card social-card">
+                    <div class="card-header">
+                        <h6 class="mb-0">推薦關注</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <ul class="list-group list-group-flush">
+                            {% if active_users is defined and active_users %}
+                                {% for user in active_users[:3] %}
+                                <li class="list-group-item">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <div class="d-flex align-items-center">
+                                            <img src="{{ user.avatar_url|default('/static/images/default-avatar.png') }}" alt="{{ user.display_name }}" class="social-avatar-small me-2">
+                                            <div>
+                                                <h6 class="mb-0">{{ user.display_name }}</h6>
+                                                <small class="text-muted">@{{ user.username|default('user_'+user.id[:6]) }}</small>
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-sm btn-primary rounded-pill px-3">關注</button>
+                                    </div>
+                                </li>
+                                {% endfor %}
+                            {% else %}
+                                <li class="list-group-item text-center py-3">
+                                    <i class="fas fa-users mb-2"></i>
+                                    <p class="mb-0">尚無推薦用戶</p>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- 頁腳資訊 -->
+                <div class="mt-4 small text-muted">
+                    <p>© 2023 顧晉瑋</p>
+                    <div>
+                        <a href="/about" class="text-muted me-2">關於</a>
+                        <a href="/privacy" class="text-muted me-2">隱私</a>
+                        <a href="/terms" class="text-muted">條款</a>
+                    </div>
+                </div>
             </div>
         </div>
-    </footer>
+    </div>
 
-    <!-- JavaScript 庫 -->
+    <!-- 移動版底部導航 -->
+    <nav class="social-mobile-nav d-lg-none">
+        <a href="/" class="{{ 'active' if request.path == '/' }}">
+            🏠
+        </a>
+        <a href="/explore" class="{{ 'active' if request.path == '/explore' }}">
+            🧭
+        </a>
+        <a href="/movies" class="{{ 'active' if '/movies' in request.path }}">
+            🎬
+        </a>
+        {% if 'user_id' in session %}
+        <a href="/notifications" class="{{ 'active' if request.path == '/notifications' }}">
+            🔔
+            {% if notification_count and notification_count > 0 %}
+            <span class="badge bg-danger rounded-circle position-absolute top-0 start-100 translate-middle p-1">{{ notification_count }}</span>
+            {% endif %}
+        </a>
+        <a href="/profile" class="{{ 'active' if request.path == '/profile' }}">
+            👤
+        </a>
+        {% else %}
+        <a href="/login">
+            🔑
+        </a>
+        <a href="/register">
+            ✍️
+        </a>
+        {% endif %}
+    </nav>
+
+    <!-- JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- 自定義 JavaScript -->
-    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
-    <!-- 在頁面底部添加 -->
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-database.js"></script>
-    <script>
-      // 初始化 Firebase
-      const firebaseConfig = {
-        apiKey: "AIzaSyA74yCIdADHUNyeWAIrPg5jDLd7vHYdMIY",
-        authDomain: "project-7332910669653362321.firebaseapp.com",
-        projectId: "project-7332910669653362321",
-        storageBucket: "project-7332910669653362321.firebasestorage.app",
-        messagingSenderId: "510920038201",
-        appId: "1:510920038201:web:f7396cad3ff1c407defae8",
-        measurementId: "G-SLTJQRT9QD"
-      };
-      firebase.initializeApp(firebaseConfig);
-      
-      // 實時通知系統
-      const userId = "{{ session.get('user_id', '') }}";
-      if (userId) {
-        const notificationsRef = firebase.database().ref('notifications/' + userId);
-        notificationsRef.on('value', (snapshot) => {
-          const notifications = snapshot.val();
-          if (notifications) {
-            // 處理新通知
-            updateNotificationBadge(Object.keys(notifications).length);
-          }
-        });
-      }
-      
-      function updateNotificationBadge(count) {
-        const badge = document.getElementById('notification-badge');
-        if (badge) {
-          badge.textContent = count;
-          badge.style.display = count > 0 ? 'inline-block' : 'none';
-        }
-      }
-    </script>
-    <script>
-      document.addEventListener('DOMContentLoaded', function() {
-        // 初始化性能監控
-        const perf = firebase.performance();
-        
-        // 自定義跟踪
-        const pageLoadTrace = perf.trace('page_load');
-        pageLoadTrace.start();
-        
-        window.addEventListener('load', function() {
-          pageLoadTrace.stop();
-          
-          // 記錄重要指標
-          if (window.performance && window.performance.timing) {
-            const timing = window.performance.timing;
-            const responseStart = timing.responseStart - timing.navigationStart;
-            const domComplete = timing.domComplete - timing.navigationStart;
-            
-            // 將指標添加到跟踪
-            pageLoadTrace.putMetric('response_start_ms', responseStart);
-            pageLoadTrace.putMetric('dom_complete_ms', domComplete);
-          }
-        });
-      });
-    </script>
+    <script src="{{ url_for('static', filename='js/social.js') }}"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html> 

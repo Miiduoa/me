@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}電影資料檢查 - 顧晉瑋的網站{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>電影資料檢查工具</h2>
+    <div class="alert alert-info">此頁面用於檢查從Firebase獲取電影資料的情況</div>
+    
+    <!-- 直接從 Firebase 獲取 -->
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            直接從 Firebase 獲取 ({{ movies_direct|length }} 筆資料)
+        </div>
+        <div class="card-body">
+            {% if movies_direct %}
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>標題</th>
+                            <th>日期</th>
+                            <th>圖片</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for movie in movies_direct %}
+                        <tr>
+                            <td>{{ movie.id }}</td>
+                            <td>{{ movie.title }}</td>
+                            <td>{{ movie.date }}</td>
+                            <td>{% if movie.image_url %}<a href="{{ movie.image_url }}" target="_blank">查看圖片</a>{% else %}無圖片{% endif %}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="alert alert-warning">沒有直接從Firebase獲取到資料</div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- 使用函數獲取 -->
+    <div class="card">
+        <div class="card-header bg-success text-white">
+            使用函數獲取 ({{ movies_function|length }} 筆資料)
+        </div>
+        <div class="card-body">
+            {% if movies_function %}
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>標題</th>
+                            <th>日期</th>
+                            <th>圖片</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for movie in movies_function %}
+                        <tr>
+                            <td>{{ movie.id }}</td>
+                            <td>{{ movie.title }}</td>
+                            <td>{{ movie.date }}</td>
+                            <td>{% if movie.image_url %}<a href="{{ movie.image_url }}" target="_blank">查看圖片</a>{% else %}無圖片{% endif %}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% else %}
+                <div class="alert alert-warning">沒有通過函數獲取到資料</div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="mt-4">
+        <a href="/system-check" class="btn btn-primary">返回系統檢查</a>
+        <a href="/movies" class="btn btn-secondary">查看電影頁面</a>
+    </div>
+</div>
+{% endblock %} 

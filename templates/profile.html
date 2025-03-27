@@ -1,130 +1,269 @@
 {% extends "base.html" %}
 
-{% block title %}個人資料 - 顧晉瑋的網站{% endblock %}
+{% block title %}{{ user.display_name }} - CineSocial{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="row">
-        <div class="col-lg-4 mb-4">
-            <div class="card border-0 shadow-sm">
-                <div class="card-body text-center">
-                    <div class="mb-4">
-                        <div class="avatar-circle mx-auto">
-                            <span class="avatar-text">{{ user.display_name[:1] }}</span>
-                        </div>
-                    </div>
-                    <h3>{{ user.display_name }}</h3>
-                    <p class="text-muted">{{ user.email }}</p>
-                    <hr>
-                    <div class="d-grid">
-                        <button class="btn btn-outline-primary">
-                            <i class="fas fa-edit me-1"></i> 編輯資料
-                        </button>
-                    </div>
+<!-- 用戶封面和基本資料 -->
+<div class="social-card mb-4">
+    <div class="position-relative">
+        <div class="bg-primary rounded-top" style="height: 120px;"></div>
+        <div class="d-flex justify-content-between p-3">
+            <div class="d-flex align-items-end mt-n5">
+                <div class="position-relative">
+                    <img src="{{ user.avatar_url|default('/static/images/default-avatar.png') }}" class="rounded-circle border border-4 border-white" style="width: 120px; height: 120px; object-fit: cover;">
+                    
+                    {% if 'user_id' in session and session.get('user_id') == user.id %}
+                    <button class="btn btn-light btn-sm rounded-circle position-absolute bottom-0 end-0" data-bs-toggle="modal" data-bs-target="#avatarModal">
+                        <i class="fas fa-camera"></i>
+                    </button>
+                    {% endif %}
+                </div>
+                <div class="ms-3">
+                    <h1 class="mb-0">{{ user.display_name }}</h1>
+                    <p class="text-muted">@{{ user.username|default('user_'+user.id[:6]) }}</p>
                 </div>
             </div>
             
-            <div class="card border-0 shadow-sm mt-4">
-                <div class="card-header bg-white">
-                    <h5 class="mb-0">統計資料</h5>
-                </div>
-                <div class="card-body">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <div>喜歡的電影</div>
-                        <div class="badge bg-primary rounded-pill">{{ liked_movies|length }}</div>
+            {% if 'user_id' in session and session.get('user_id') == user.id %}
+            <div>
+                <a href="/settings" class="btn btn-outline-secondary">
+                    <i class="fas fa-cog me-1"></i> 編輯資料
+                </a>
+            </div>
+            {% else %}
+            <div>
+                <button class="btn btn-primary rounded-pill px-4">
+                    <i class="fas fa-user-plus me-1"></i> 關注
+                </button>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-8">
+                <p>{{ user.bio|default('這個用戶尚未填寫個人簡介...') }}</p>
+                
+                <div class="d-flex mt-3">
+                    <div class="me-4">
+                        <strong>42</strong> <span class="text-muted">貼文</span>
                     </div>
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div>帳號創建日期</div>
-                        <div>{{ user.created_at.strftime('%Y-%m-%d') if user.created_at else '未知' }}</div>
+                    <div class="me-4">
+                        <strong>158</strong> <span class="text-muted">關注者</span>
+                    </div>
+                    <div>
+                        <strong>56</strong> <span class="text-muted">正在關注</span>
                     </div>
                 </div>
             </div>
-
-            <form action="/profile/upload-avatar" method="POST" enctype="multipart/form-data" class="mt-3">
-                <div class="mb-3">
-                    <label for="avatar" class="form-label">上傳新頭像</label>
-                    <input class="form-control" type="file" id="avatar" name="avatar" accept="image/*">
-                </div>
-                <div class="d-grid">
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-upload me-1"></i> 上傳頭像
-                    </button>
-                </div>
-            </form>
-        </div>
-        
-        <div class="col-lg-8">
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-white d-flex justify-content-between align-items-center">
-                    <h5 class="mb-0">我喜歡的電影</h5>
-                    <a href="/movies" class="btn btn-sm btn-outline-primary">探索更多電影</a>
-                </div>
-                <div class="card-body">
-                    {% if liked_movies %}
-                        <div class="row g-4">
-                            {% for movie in liked_movies %}
-                                <div class="col-md-6 col-lg-4">
-                                    <div class="card h-100 shadow-hover">
-                                        {% if movie.poster %}
-                                            <img src="{{ movie.poster }}" class="card-img-top" alt="{{ movie.title }}">
-                                        {% else %}
-                                            <div class="bg-light p-4 text-center">
-                                                <i class="fas fa-film fa-3x text-secondary"></i>
-                                            </div>
-                                        {% endif %}
-                                        <div class="card-body">
-                                            <h6 class="card-title text-truncate">{{ movie.title }}</h6>
-                                            <div class="small text-muted mb-2">
-                                                <i class="fas fa-star text-warning me-1"></i> {{ movie.rating }}
-                                            </div>
-                                            <a href="{{ url_for('movie_detail', movie_id=movie.id) }}" class="btn btn-sm btn-primary w-100">查看詳情</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            {% endfor %}
+            <div class="col-md-4">
+                <div class="card bg-light">
+                    <div class="card-body p-3">
+                        <h6 class="mb-2">個人資訊</h6>
+                        <div class="small">
+                            <p class="mb-1">
+                                <i class="fas fa-envelope me-2 text-muted"></i> {{ user.email }}
+                            </p>
+                            <p class="mb-1">
+                                <i class="fas fa-calendar-alt me-2 text-muted"></i> 
+                                加入於 {{ user.created_at|default('未知日期') }}
+                            </p>
                         </div>
-                    {% else %}
-                        <div class="alert alert-info text-center">
-                            <i class="fas fa-info-circle me-2"></i> 您尚未喜歡任何電影
-                        </div>
-                        <div class="text-center">
-                            <a href="/movies" class="btn btn-primary">
-                                <i class="fas fa-search me-1"></i> 探索電影
-                            </a>
-                        </div>
-                    {% endif %}
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- 分頁標籤 -->
+<ul class="nav nav-pills mb-4 justify-content-center justify-content-md-start">
+    <li class="nav-item">
+        <a class="nav-link active" href="#posts" data-bs-toggle="tab">
+            <i class="fas fa-stream me-1"></i> 貼文
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="#likes" data-bs-toggle="tab">
+            <i class="fas fa-heart me-1"></i> 收藏電影
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="#media" data-bs-toggle="tab">
+            <i class="fas fa-photo-video me-1"></i> 媒體
+        </a>
+    </li>
+</ul>
+
+<!-- 分頁內容 -->
+<div class="tab-content">
+    <!-- 貼文標籤 -->
+    <div class="tab-pane fade show active" id="posts">
+        {% if posts %}
+            {% for post in posts %}
+            <div class="social-post">
+                <div class="social-post-header">
+                    <img src="{{ user.avatar_url|default('/static/images/default-avatar.png') }}" class="social-avatar me-2" alt="{{ user.display_name }}">
+                    <div>
+                        <div class="fw-bold">{{ user.display_name }}</div>
+                        <div class="small text-muted">{{ post.time_ago }}</div>
+                    </div>
+                </div>
+                <div class="social-post-body">
+                    <p>{{ post.text }}</p>
+                    {% if post.image_url %}
+                    <img src="{{ post.image_url }}" alt="貼文圖片" class="img-fluid rounded mb-3">
+                    {% endif %}
+                </div>
+                <div class="social-post-footer">
+                    <div class="social-post-actions">
+                        <button type="button">
+                            <i class="fas fa-thumbs-up me-1"></i> 讚 ({{ post.likes_count|default(0) }})
+                        </button>
+                        <button type="button">
+                            <i class="fas fa-comment me-1"></i> 留言 ({{ post.comments_count|default(0) }})
+                        </button>
+                        <button type="button">
+                            <i class="fas fa-share me-1"></i> 分享
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+        <div class="social-card text-center py-5">
+            <i class="fas fa-stream fa-3x mb-3 text-muted"></i>
+            <h5>尚無貼文</h5>
+            <p class="text-muted">這個用戶還沒有發佈任何貼文。</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- 收藏電影標籤 -->
+    <div class="tab-pane fade" id="likes">
+        {% if liked_movies %}
+        <div class="row row-cols-2 row-cols-md-4 g-4">
+            {% for movie in liked_movies %}
+            <div class="col">
+                <div class="card h-100">
+                    <a href="{{ url_for('movie_detail', movie_id=movie.id) }}">
+                        {% if movie.image_url %}
+                        <img src="{{ movie.image_url }}" class="card-img-top" alt="{{ movie.title }}">
+                        {% else %}
+                        <div class="bg-secondary text-white d-flex align-items-center justify-content-center" style="height: 200px;">
+                            <i class="fas fa-film fa-3x"></i>
+                        </div>
+                        {% endif %}
+                    </a>
+                    <div class="card-body p-2">
+                        <h6 class="card-title text-truncate">
+                            <a href="{{ url_for('movie_detail', movie_id=movie.id) }}" class="text-decoration-none text-dark">
+                                {{ movie.title }}
+                            </a>
+                        </h6>
+                        <p class="card-text small text-muted mb-0">
+                            {{ movie.date }}
+                            {% if movie.rating %}
+                            <span class="ms-1"><i class="fas fa-star text-warning"></i> {{ movie.rating }}</span>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="social-card text-center py-5">
+            <i class="fas fa-heart fa-3x mb-3 text-muted"></i>
+            <h5>尚無收藏電影</h5>
+            <p class="text-muted">這個用戶還沒有收藏任何電影。</p>
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- 媒體標籤 -->
+    <div class="tab-pane fade" id="media">
+        <div class="social-card text-center py-5">
+            <i class="fas fa-photo-video fa-3x mb-3 text-muted"></i>
+            <h5>尚無媒體內容</h5>
+            <p class="text-muted">這個用戶尚未分享任何媒體內容。</p>
+        </div>
+    </div>
+</div>
+
+<!-- 頭像上傳模態框 -->
+{% if 'user_id' in session and session.get('user_id') == user.id %}
+<div class="modal fade" id="avatarModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">更新頭像</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="avatarForm" action="/profile/upload-avatar" method="POST" enctype="multipart/form-data">
+                    <div class="mb-3 text-center">
+                        <div class="avatar-preview mb-3 mx-auto" style="width: 150px; height: 150px; overflow: hidden; border-radius: 50%;">
+                            <img id="avatarPreview" src="{{ user.avatar_url|default('/static/images/default-avatar.png') }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                        <label for="avatarInput" class="btn btn-primary">
+                            <i class="fas fa-upload me-1"></i> 選擇頭像
+                        </label>
+                        <input type="file" id="avatarInput" name="avatar" class="d-none" accept="image/*">
+                    </div>
+                    <div class="text-center">
+                        <button type="submit" class="btn btn-success px-4">上傳</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 {% endblock %}
 
-{% block extra_css %}
-<style>
-    .avatar-circle {
-        width: 100px;
-        height: 100px;
-        background-color: #0d6efd;
-        border-radius: 50%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 頭像預覽
+    const avatarInput = document.getElementById('avatarInput');
+    const avatarPreview = document.getElementById('avatarPreview');
+    
+    if (avatarInput && avatarPreview) {
+        avatarInput.addEventListener('change', function() {
+            if (this.files && this.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    avatarPreview.src = e.target.result;
+                };
+                reader.readAsDataURL(this.files[0]);
+            }
+        });
     }
     
-    .avatar-text {
-        font-size: 42px;
-        color: white;
-        font-weight: bold;
-    }
-    
-    .shadow-hover {
-        transition: all 0.3s;
-    }
-    
-    .shadow-hover:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
-    }
-</style>
+    // 點讚功能
+    const likeButtons = document.querySelectorAll('.social-post-actions button:first-child');
+    likeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const icon = this.querySelector('i');
+            if (icon.classList.contains('fa-thumbs-up') && !icon.classList.contains('text-primary')) {
+                icon.classList.add('text-primary');
+                
+                // 提取當前點讚數並增加
+                const likeText = this.textContent.trim();
+                const likeCount = parseInt(likeText.match(/\d+/)[0]) + 1;
+                this.innerHTML = `<i class="fas fa-thumbs-up me-1 text-primary"></i> 讚 (${likeCount})`;
+            } else {
+                icon.classList.remove('text-primary');
+                
+                // 提取當前點讚數並減少
+                const likeText = this.textContent.trim();
+                const likeCount = Math.max(0, parseInt(likeText.match(/\d+/)[0]) - 1);
+                this.innerHTML = `<i class="fas fa-thumbs-up me-1"></i> 讚 (${likeCount})`;
+            }
+        });
+    });
+});
+</script>
 {% endblock %} 

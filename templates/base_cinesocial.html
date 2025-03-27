@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CineSocial{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/cinesocial.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="cinesocial-body">
+    <!-- 頂部導航 -->
+    <nav class="navbar navbar-expand-lg navbar-dark cinesocial-navbar fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">
+                <i class="fas fa-film me-2"></i>CineSocial
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav me-auto">
+                    <li class="nav-item">
+                        <a class="nav-link" href="/"><i class="fas fa-home"></i> <span>首頁</span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/movies"><i class="fas fa-film"></i> <span>電影</span></a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="/explore"><i class="fas fa-compass"></i> <span>探索</span></a>
+                    </li>
+                </ul>
+                <form class="d-flex me-3" action="/search" method="GET">
+                    <div class="input-group">
+                        <input class="form-control bg-transparent text-light border-secondary" type="search" name="q" placeholder="搜尋...">
+                        <button class="btn btn-outline-secondary" type="submit"><i class="fas fa-search"></i></button>
+                    </div>
+                </form>
+                {% if 'user_id' in session %}
+                <div class="dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                        <img src="{{ user.avatar_url|default('/static/images/default-avatar.png') }}" alt="{{ session.get('user_name') }}" class="avatar-small">
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end cinesocial-dropdown-menu">
+                        <li><a class="dropdown-item" href="/profile"><i class="fas fa-user me-2"></i>個人資料</a></li>
+                        <li><a class="dropdown-item" href="/settings"><i class="fas fa-cog me-2"></i>設定</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li><a class="dropdown-item" href="/logout"><i class="fas fa-sign-out-alt me-2"></i>登出</a></li>
+                    </ul>
+                </div>
+                {% else %}
+                <div class="d-flex">
+                    <a href="/login" class="btn btn-outline-light me-2">登入</a>
+                    <a href="/register" class="btn btn-cinesocial">註冊</a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- 側邊欄和主要內容 -->
+    <div class="container-fluid">
+        <div class="row">
+            <!-- 側邊欄 -->
+            <div class="col-lg-3 col-xl-2 d-none d-lg-block">
+                <div class="cinesocial-sidebar">
+                    <ul class="nav flex-column">
+                        <li class="nav-item">
+                            <a class="nav-link {{ 'active' if request.path == '/' }}" href="/">
+                                <i class="fas fa-home"></i>
+                                <span>首頁</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ 'active' if '/movies' in request.path }}" href="/movies">
+                                <i class="fas fa-film"></i>
+                                <span>電影</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ 'active' if '/explore' in request.path }}" href="/explore">
+                                <i class="fas fa-compass"></i>
+                                <span>探索</span>
+                            </a>
+                        </li>
+                        {% if 'user_id' in session %}
+                        <li class="nav-item">
+                            <a class="nav-link {{ 'active' if '/profile' in request.path }}" href="/profile">
+                                <i class="fas fa-user"></i>
+                                <span>個人資料</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ 'active' if '/likes' in request.path }}" href="/likes">
+                                <i class="fas fa-heart"></i>
+                                <span>喜歡</span>
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link {{ 'active' if '/bookmarks' in request.path }}" href="/bookmarks">
+                                <i class="fas fa-bookmark"></i>
+                                <span>收藏</span>
+                            </a>
+                        </li>
+                        {% endif %}
+                    </ul>
+
+                    {% if trending_movies %}
+                    <div class="trending-section mt-4">
+                        <h6 class="sidebar-heading">熱門電影</h6>
+                        <ul class="list-unstyled">
+                            {% for movie in trending_movies %}
+                            <li class="mb-2">
+                                <a href="/movie/{{ movie.id }}" class="d-flex align-items-center text-decoration-none">
+                                    {% if movie.image_url %}
+                                    <img src="{{ movie.image_url }}" alt="{{ movie.title }}" class="mini-poster me-2">
+                                    {% else %}
+                                    <div class="mini-poster me-2 bg-secondary d-flex align-items-center justify-content-center">
+                                        <i class="fas fa-film"></i>
+                                    </div>
+                                    {% endif %}
+                                    <div>
+                                        <div class="small">{{ movie.title }}</div>
+                                        <div class="extra-small text-muted">評分: {{ movie.rating|default('--') }}</div>
+                                    </div>
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    {% if active_users %}
+                    <div class="active-users-section mt-4">
+                        <h6 class="sidebar-heading">活躍用戶</h6>
+                        <ul class="list-unstyled">
+                            {% for user in active_users %}
+                            <li class="mb-2">
+                                <a href="/profile/{{ user.id }}" class="d-flex align-items-center text-decoration-none">
+                                    <img src="{{ user.avatar_url|default('/static/images/default-avatar.png') }}" alt="{{ user.display_name }}" class="avatar-small me-2">
+                                    <div class="small">{{ user.display_name }}</div>
+                                </a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- 主要內容 -->
+            <div class="col-lg-6 col-md-8">
+                <div class="cinesocial-content">
+                    {% block content %}{% endblock %}
+                </div>
+            </div>
+
+            <!-- 右側資訊欄 -->
+            <div class="col-lg-3 col-xl-4 d-none d-md-block">
+                <div class="cinesocial-info-column">
+                    <!-- 用戶資訊卡 -->
+                    {% if 'user_id' in session and user %}
+                    <div class="cinesocial-card mb-4">
+                        <div class="cinesocial-card-body">
+                            <div class="d-flex align-items-center mb-3">
+                                <img src="{{ user.avatar_url|default('/static/images/default-avatar.png') }}" alt="{{ user.display_name }}" class="avatar me-3">
+                                <div>
+                                    <h5 class="mb-0">{{ user.display_name }}</h5>
+                                    <small class="text-muted">{{ user.email }}</small>
+                                </div>
+                            </div>
+                            <div class="d-flex justify-content-around text-center mb-2">
+                                <div>
+                                    <div>{{ user.posts_count|default(0) }}</div>
+                                    <small class="text-muted">貼文</small>
+                                </div>
+                                <div>
+                                    <div>{{ user.likes_count|default(0) }}</div>
+                                    <small class="text-muted">喜歡</small>
+                                </div>
+                                <div>
+                                    <div>{{ user.comments_count|default(0) }}</div>
+                                    <small class="text-muted">評論</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- 推薦區域 -->
+                    <div class="cinesocial-card mb-4">
+                        <div class="cinesocial-card-header">
+                            <h6>推薦關注</h6>
+                        </div>
+                        <div class="cinesocial-card-body p-0">
+                            <ul class="list-group list-group-flush bg-transparent">
+                                <li class="list-group-item bg-transparent border-light">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center">
+                                            <img src="/static/images/default-avatar.png" alt="User" class="avatar-small me-2">
+                                            <div>
+                                                <div class="small fw-bold">電影愛好者</div>
+                                                <div class="extra-small text-muted">@movie_lover</div>
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-sm btn-outline-light rounded-pill">關注</button>
+                                    </div>
+                                </li>
+                                <li class="list-group-item bg-transparent border-light">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center">
+                                            <img src="/static/images/default-avatar.png" alt="User" class="avatar-small me-2">
+                                            <div>
+                                                <div class="small fw-bold">影評人</div>
+                                                <div class="extra-small text-muted">@film_critic</div>
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-sm btn-outline-light rounded-pill">關注</button>
+                                    </div>
+                                </li>
+                                <li class="list-group-item bg-transparent border-light">
+                                    <div class="d-flex align-items-center justify-content-between">
+                                        <div class="d-flex align-items-center">
+                                            <img src="/static/images/default-avatar.png" alt="User" class="avatar-small me-2">
+                                            <div>
+                                                <div class="small fw-bold">導演視角</div>
+                                                <div class="extra-small text-muted">@director_view</div>
+                                            </div>
+                                        </div>
+                                        <button class="btn btn-sm btn-outline-light rounded-pill">關注</button>
+                                    </div>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <!-- 版權信息 -->
+                    <div class="mt-4">
+                        <div class="extra-small text-muted mb-2">
+                            © 2023 CineSocial · 關於 · 隱私 · 條款
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 移動版底部導航 -->
+    <nav class="cinesocial-mobile-nav d-lg-none">
+        <a href="/" class="{{ 'active' if request.path == '/' }}">
+            <i class="fas fa-home"></i>
+            <span>首頁</span>
+        </a>
+        <a href="/movies" class="{{ 'active' if '/movies' in request.path }}">
+            <i class="fas fa-film"></i>
+            <span>電影</span>
+        </a>
+        <a href="/explore" class="{{ 'active' if '/explore' in request.path }}">
+            <i class="fas fa-compass"></i>
+            <span>探索</span>
+        </a>
+        {% if 'user_id' in session %}
+        <a href="/profile" class="{{ 'active' if '/profile' in request.path }}">
+            <i class="fas fa-user"></i>
+            <span>我的</span>
+        </a>
+        {% else %}
+        <a href="/login">
+            <i class="fas fa-sign-in-alt"></i>
+            <span>登入</span>
+        </a>
+        {% endif %}
+    </nav>
+    
+    <!-- JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/cinesocial.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html> 

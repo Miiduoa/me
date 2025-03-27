@@ -1,0 +1,227 @@
+:root {
+    --social-primary: #1877F2;
+    --social-secondary: #E4E6EB;
+    --social-bg: #F0F2F5;
+    --social-card-bg: #FFFFFF;
+    --social-text: #050505;
+    --social-text-secondary: #65676B;
+    --social-border: #E4E6EB;
+}
+
+/* 基本樣式 */
+body.social-body {
+    background-color: var(--social-bg);
+    color: var(--social-text);
+    font-family: 'Noto Sans TC', sans-serif;
+    padding-top: 56px;
+}
+
+/* 導航欄 */
+.social-navbar {
+    background-color: var(--social-card-bg);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.social-navbar .navbar-brand {
+    color: var(--social-primary);
+    font-weight: bold;
+}
+
+.social-navbar .nav-link {
+    color: var(--social-text-secondary);
+    font-size: 1.2rem;
+    padding: 0.5rem 1rem;
+}
+
+.social-navbar .nav-link.active {
+    color: var(--social-primary);
+}
+
+.social-search-form {
+    width: 40%;
+}
+
+.social-search-form .form-control {
+    border-radius: 20px 0 0 20px;
+}
+
+.social-search-form .btn {
+    border-radius: 0 20px 20px 0;
+}
+
+/* 側邊欄 */
+.social-sidebar {
+    padding: 20px;
+    position: sticky;
+    top: 76px;
+    height: calc(100vh - 76px);
+    overflow-y: auto;
+}
+
+.social-sidebar .list-group-item {
+    border: none;
+    border-radius: 10px;
+    margin-bottom: 5px;
+    background-color: transparent;
+    color: var(--social-text);
+}
+
+.social-sidebar .list-group-item.active {
+    background-color: rgba(24, 119, 242, 0.1);
+    color: var(--social-primary);
+    font-weight: bold;
+}
+
+.social-sidebar .list-group-item:hover {
+    background-color: var(--social-secondary);
+}
+
+/* 內容區 */
+.social-content {
+    padding: 20px;
+}
+
+/* 卡片樣式 */
+.social-card {
+    border-radius: 10px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: none;
+    margin-bottom: 20px;
+}
+
+.social-card .card-header {
+    background-color: transparent;
+    border-bottom: 1px solid var(--social-border);
+    padding: 15px;
+}
+
+.social-card .card-body {
+    padding: 15px;
+}
+
+.social-card .card-footer {
+    background-color: transparent;
+    border-top: 1px solid var(--social-border);
+    padding: 15px;
+}
+
+/* 貼文樣式 */
+.social-post {
+    border-radius: 10px;
+    background-color: var(--social-card-bg);
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.social-post-header {
+    padding: 15px;
+    display: flex;
+    align-items: center;
+}
+
+.social-post-body {
+    padding: 0 15px 15px;
+}
+
+.social-post-footer {
+    padding: 10px 15px;
+    border-top: 1px solid var(--social-border);
+}
+
+.social-post-actions {
+    display: flex;
+    justify-content: space-between;
+}
+
+.social-post-actions button {
+    background: none;
+    border: none;
+    color: var(--social-text-secondary);
+    flex: 1;
+    font-size: 0.9rem;
+    padding: 8px 0;
+}
+
+.social-post-actions button:hover {
+    background-color: var(--social-secondary);
+    border-radius: 5px;
+}
+
+/* 頭像樣式 */
+.social-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.social-avatar-small {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.social-movie-thumbnail {
+    width: 50px;
+    height: 70px;
+    object-fit: cover;
+    border-radius: 5px;
+}
+
+/* 移動版底部導航 */
+.social-mobile-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: var(--social-card-bg);
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0;
+    box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+}
+
+.social-mobile-nav a {
+    color: var(--social-text-secondary);
+    text-decoration: none;
+    font-size: 1.2rem;
+    text-align: center;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.social-mobile-nav a.active {
+    color: var(--social-primary);
+}
+
+/* 下拉選單 */
+.social-dropdown-menu {
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    border: none;
+    padding: 8px 0;
+}
+
+.social-dropdown-menu .dropdown-item {
+    padding: 8px 20px;
+}
+
+.social-dropdown-menu .dropdown-item:hover {
+    background-color: var(--social-bg);
+}
+
+/* 響應式調整 */
+@media (max-width: 991.98px) {
+    .social-search-form {
+        width: 100%;
+        margin: 10px 0;
+    }
+    
+    .social-content {
+        margin-bottom: 60px; /* 為底部導航騰出空間 */
+    }
+} 

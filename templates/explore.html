@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+
+{% block title %}探索 - CineSocial{% endblock %}
+
+{% block content %}
+<!-- 熱門電影區 -->
+<div class="social-card mb-4">
+    <div class="card-header bg-light">
+        <h5 class="mb-0">🔥 熱門電影</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="row g-0">
+            {% if trending_movies %}
+                {% for movie in trending_movies %}
+                <div class="col-6 col-md-3 p-1">
+                    <a href="/movie/{{ movie.id }}" class="text-decoration-none">
+                        <div class="card h-100 border-0 bg-light">
+                            <img src="{{ movie.poster_url|default('/static/images/default-movie.jpg') }}" 
+                                 class="card-img-top" alt="{{ movie.title }}"
+                                 style="height: 200px; object-fit: cover;">
+                            <div class="card-body p-2 text-center">
+                                <p class="card-title mb-0 small text-truncate">{{ movie.title }}</p>
+                                <div class="text-warning">
+                                    {% set rating = movie.rating|default(0)|int %}
+                                    {% for i in range(rating) %}⭐{% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12 text-center p-4">
+                    <p class="mb-0 text-muted">尚無熱門電影</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- 熱門貼文區 -->
+<div class="social-card mb-4">
+    <div class="card-header bg-light">
+        <h5 class="mb-0">📣 熱門貼文</h5>
+    </div>
+    <div class="card-body p-0">
+        {% if popular_posts %}
+            {% for post in popular_posts %}
+            <div class="social-post">
+                <div class="social-post-header">
+                    <img src="{{ post.user_avatar|default('/static/images/default-avatar.png') }}" class="social-avatar me-2" alt="{{ post.user_name }}">
+                    <div>
+                        <div class="fw-bold">{{ post.user_name }}</div>
+                        <div class="small text-muted">{{ post.time_ago }}</div>
+                    </div>
+                </div>
+                <div class="social-post-body">
+                    <p>{{ post.text }}</p>
+                    {% if post.image_url %}
+                    <img src="{{ post.image_url }}" alt="貼文圖片" class="img-fluid rounded mb-3">
+                    {% endif %}
+                </div>
+                <div class="social-post-footer">
+                    <div class="social-post-actions">
+                        <button type="button" class="btn btn-light me-2">
+                            👍 讚 ({{ post.likes_count|default(0) }})
+                        </button>
+                        <button type="button" class="btn btn-light">
+                            💬 留言 ({{ post.comments_count|default(0) }})
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="text-center p-4">
+                <p class="mb-0 text-muted">尚無熱門貼文</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- 推薦用戶區 -->
+<div class="social-card mb-4">
+    <div class="card-header bg-light">
+        <h5 class="mb-0">👥 推薦用戶</h5>
+    </div>
+    <div class="card-body">
+        {% if recommended_users %}
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3">
+                {% for user in recommended_users %}
+                    <div class="col">
+                        <div class="card h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center mb-3">
+                                    <img src="{{ user.avatar_url|default('/static/images/default-avatar.png') }}" class="social-avatar me-2" alt="{{ user.display_name }}">
+                                    <div>
+                                        <h6 class="mb-0">{{ user.display_name }}</h6>
+                                        <small class="text-muted">@{{ user.username|default('user_'+user.id[:6]) }}</small>
+                                    </div>
+                                </div>
+                                <button class="btn btn-sm btn-primary w-100">關注</button>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center p-4">
+                <p class="text-muted">尚無推薦用戶</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 點讚功能
+    const likeButtons = document.querySelectorAll('.social-post-actions button:first-child');
+    likeButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            {% if 'user_id' in session %}
+            const postId = this.dataset.postId;
+            if (!postId) return;
+            
+            const icon = this.querySelector('i');
+            
+            fetch(`/like-post/${postId}`, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    if (data.liked) {
+                        icon.classList.add('text-primary');
+                        // 提取當前點讚數並增加
+                        const likeText = this.textContent.trim();
+                        const likeCount = parseInt(likeText.match(/\d+/)[0]) + 1;
+                        this.innerHTML = `<i class="fas fa-thumbs-up me-1 text-primary"></i> 讚 (${likeCount})`;
+                    } else {
+                        icon.classList.remove('text-primary');
+                        // 提取當前點讚數並減少
+                        const likeText = this.textContent.trim();
+                        const likeCount = Math.max(0, parseInt(likeText.match(/\d+/)[0]) - 1);
+                        this.innerHTML = `<i class="fas fa-thumbs-up me-1"></i> 讚 (${likeCount})`;
+                    }
+                }
+            })
+            .catch(error => console.error('Error:', error));
+            {% else %}
+            window.location.href = '/login';
+            {% endif %}
+        });
+    });
+});
+</script>
+{% endblock %} 

@@ -1,0 +1,63 @@
+{% extends "base_cinesocial.html" %}
+
+{% block title %}關於我 - CineSocial{% endblock %}
+
+{% block content %}
+<div class="cinesocial-card mb-4">
+    <div class="cinesocial-card-header">
+        <h3>關於顧晉瑋</h3>
+    </div>
+    <div class="cinesocial-card-body">
+        <div class="row">
+            <div class="col-md-4 text-center mb-3 mb-md-0">
+                <img src="{{ url_for('static', filename='images/profile.jpg') }}" class="img-fluid rounded-circle profile-img mb-3" alt="顧晉瑋">
+                <h4>顧晉瑋</h4>
+                <p class="text-muted">全端開發者 / 電影愛好者</p>
+                <div class="social-links mt-3">
+                    <a href="#" class="me-2"><i class="fab fa-github fa-lg"></i></a>
+                    <a href="#" class="me-2"><i class="fab fa-linkedin fa-lg"></i></a>
+                    <a href="#" class="me-2"><i class="fab fa-twitter fa-lg"></i></a>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <h5 class="mb-3">專業簡介</h5>
+                <p>我是一名熱愛技術的全端開發者，專注於網站開發和用戶體驗設計。在過去的幾年中，我參與開發了多個網站項目，涵蓋不同領域和功能需求。</p>
+                
+                <h5 class="mb-3 mt-4">技術技能</h5>
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check-circle text-success me-2"></i>Python / Flask</li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i>JavaScript / React</li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i>HTML5 / CSS3</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-check-circle text-success me-2"></i>數據庫設計</li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i>UI/UX 設計</li>
+                            <li><i class="fas fa-check-circle text-success me-2"></i>雲端服務</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="cinesocial-card">
+    <div class="cinesocial-card-header">
+        <h3>關於本站</h3>
+    </div>
+    <div class="cinesocial-card-body">
+        <p>這個網站展示了我對電影的熱愛，以及我在網站開發方面的技能。</p>
+        <p>特色功能包括：</p>
+        <ul>
+            <li>最新電影資訊</li>
+            <li>用戶社交互動</li>
+            <li>電影評論系統</li>
+            <li>多種視覺設計風格</li>
+        </ul>
+    </div>
+</div>
+{% endblock %} 
